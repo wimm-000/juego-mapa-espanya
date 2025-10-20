@@ -28,6 +28,7 @@ export default function Dev() {
   const [tolerancia, setTolerancia] = useState(30);
   const [puntoSeleccionado, setPuntoSeleccionado] = useState<string | null>(null);
   const [modoZona, setModoZona] = useState(false);
+  const [puntoArrastrando, setPuntoArrastrando] = useState<string | null>(null);
 
   // Cargar puntos desde localStorage al montar
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function Dev() {
   }, [puntos]);
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (puntoSeleccionado) return; // No agregar si estamos editando
+    if (puntoSeleccionado || puntoArrastrando) return; // No agregar si estamos editando o arrastrando
     
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
@@ -70,6 +71,35 @@ export default function Dev() {
       setPuntos([...puntos, nuevoPunto]);
       setNombrePunto("");
     }
+  };
+
+  const handlePuntoDragStart = (e: React.DragEvent<HTMLDivElement>, puntoId: string) => {
+    setPuntoArrastrando(puntoId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handlePuntoDragEnd = () => {
+    setPuntoArrastrando(null);
+  };
+
+  const handleMapDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (puntoArrastrando) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+  };
+
+  const handleMapDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!puntoArrastrando) return;
+
+    const container = e.currentTarget;
+    const rect = container.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 612.91315);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 543.61902);
+
+    actualizarPunto(puntoArrastrando, { x, y });
+    setPuntoArrastrando(null);
   };
 
   const eliminarPunto = (id: string) => {
@@ -176,7 +206,7 @@ export default function Dev() {
             </Link>
           </div>
           <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: 0 }}>
-            Haz clic en el mapa para obtener coordenadas. Escribe un nombre antes de hacer clic.
+            Haz clic en el mapa para añadir puntos. Arrastra los puntos/zonas para reposicionarlos. Selecciona para editar.
           </p>
         </div>
 
@@ -511,13 +541,15 @@ export default function Dev() {
       <div style={{ flex: 2, position: 'relative' }}>
         <div
           onClick={handleMapClick}
+          onDragOver={handleMapDragOver}
+          onDrop={handleMapDrop}
           style={{
             position: 'relative',
             width: '100%',
             height: '800px',
             border: '2px solid #333',
             backgroundColor: '#e8f4f8',
-            cursor: 'crosshair',
+            cursor: puntoArrastrando ? 'grabbing' : 'crosshair',
             borderRadius: '0.5rem',
             overflow: 'hidden',
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
@@ -579,19 +611,23 @@ export default function Dev() {
               {/* Zona rectangular o punto circular */}
               {punto.width !== undefined && punto.height !== undefined ? (
                 <div
+                  draggable
+                  onDragStart={(e) => handlePuntoDragStart(e, punto.id)}
+                  onDragEnd={handlePuntoDragEnd}
                   style={{
                     position: 'absolute',
                     left: `${(punto.x / 612.91315) * 100}%`,
                     top: `${(punto.y / 543.61902) * 100}%`,
                     width: `${(punto.width / 612.91315) * 100}%`,
                     height: `${(punto.height / 543.61902) * 100}%`,
-                    backgroundColor: puntoSeleccionado === punto.id ? 'rgba(0, 123, 255, 0.3)' : 'rgba(0, 123, 255, 0.15)',
+                    backgroundColor: puntoArrastrando === punto.id ? 'rgba(0, 123, 255, 0.5)' : puntoSeleccionado === punto.id ? 'rgba(0, 123, 255, 0.3)' : 'rgba(0, 123, 255, 0.15)',
                     border: puntoSeleccionado === punto.id ? '3px solid rgba(0, 123, 255, 1)' : '2px solid rgba(0, 123, 255, 0.7)',
                     transform: `translate(-50%, -50%) rotate(${punto.rotation || 0}deg)`,
-                    zIndex: puntoSeleccionado === punto.id ? 15 : 10,
+                    zIndex: puntoArrastrando === punto.id ? 20 : puntoSeleccionado === punto.id ? 15 : 10,
                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    cursor: puntoArrastrando === punto.id ? 'grabbing' : 'grab',
+                    pointerEvents: 'auto',
+                    opacity: puntoArrastrando === punto.id ? 0.5 : 1
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -600,20 +636,24 @@ export default function Dev() {
                 />
               ) : (
                 <div
+                  draggable
+                  onDragStart={(e) => handlePuntoDragStart(e, punto.id)}
+                  onDragEnd={handlePuntoDragEnd}
                   style={{
                     position: 'absolute',
                     left: `${(punto.x / 612.91315) * 100}%`,
                     top: `${(punto.y / 543.61902) * 100}%`,
                     width: '16px',
                     height: '16px',
-                    backgroundColor: puntoSeleccionado === punto.id ? 'rgba(0, 123, 255, 1)' : 'rgba(0, 123, 255, 0.7)',
+                    backgroundColor: puntoArrastrando === punto.id ? 'rgba(0, 123, 255, 0.5)' : puntoSeleccionado === punto.id ? 'rgba(0, 123, 255, 1)' : 'rgba(0, 123, 255, 0.7)',
                     borderRadius: '50%',
                     transform: 'translate(-50%, -50%)',
-                    zIndex: puntoSeleccionado === punto.id ? 15 : 10,
+                    zIndex: puntoArrastrando === punto.id ? 20 : puntoSeleccionado === punto.id ? 15 : 10,
                     border: puntoSeleccionado === punto.id ? '3px solid rgba(0, 123, 255, 1)' : '2px solid rgba(0, 123, 255, 1)',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    cursor: puntoArrastrando === punto.id ? 'grabbing' : 'grab',
+                    pointerEvents: 'auto',
+                    opacity: puntoArrastrando === punto.id ? 0.5 : 1
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
