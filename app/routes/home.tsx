@@ -10,69 +10,24 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      gap: '2rem',
-      padding: '1rem'
-    }}>
-      <h1 style={{
-        fontSize: '3rem',
-        fontWeight: 'bold',
-        textAlign: 'center',
-        margin: 0
-      }}>
+    <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-4">
+      <h1 className="text-5xl font-bold text-center m-0">
         Coloca en el Mapa de España
       </h1>
       
-      <p style={{
-        fontSize: '1.25rem',
-        textAlign: 'center',
-        color: '#666',
-        maxWidth: '600px',
-        margin: 0
-      }}>
+      <p className="text-xl text-center text-gray-600 max-w-2xl m-0">
         Aprende la geografía de España colocando las principales cordilleras en su ubicación correcta
       </p>
 
-      <div style={{
-        display: 'flex',
-        gap: '1rem',
-        flexWrap: 'wrap',
-        justifyContent: 'center'
-      }}>
+      <div className="flex gap-4 flex-wrap justify-center">
         <Link to="/juego">
-          <button style={{
-            fontSize: '1.5rem',
-            padding: '1rem 2rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            backgroundColor: '#007bff',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '600',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            transition: 'all 0.3s ease'
-          }}>
+          <button className="text-2xl px-8 py-4 rounded-lg border-none bg-blue-600 text-white cursor-pointer font-semibold shadow-md hover:bg-blue-700 transition-colors">
             🎮 Jugar
           </button>
         </Link>
 
         <Link to="/dev">
-          <button style={{
-            fontSize: '1.5rem',
-            padding: '1rem 2rem',
-            borderRadius: '0.5rem',
-            border: '2px solid #6c757d',
-            backgroundColor: 'transparent',
-            color: '#6c757d',
-            cursor: 'pointer',
-            fontWeight: '600',
-            transition: 'all 0.3s ease'
-          }}>
+          <button className="text-2xl px-8 py-4 rounded-lg border-2 border-gray-500 bg-transparent text-gray-500 cursor-pointer font-semibold hover:bg-gray-500 hover:text-white transition-colors">
             🛠️ Modo Desarrollo
           </button>
         </Link>

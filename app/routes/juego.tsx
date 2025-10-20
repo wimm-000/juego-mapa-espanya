@@ -110,60 +110,30 @@ export default function Juego() {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      padding: '2rem',
-      gap: '2rem'
-    }}>
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+    <div className="flex min-h-screen p-8 gap-8">
+      <div className="flex-1 flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">
             Puntuación: {puntuacion}
           </h2>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="flex gap-2">
             <button
               onClick={() => setModoTest(!modoTest)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: modoTest ? '#ffc107' : '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
+              className={`px-4 py-2 ${modoTest ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
             >
               {modoTest ? '🧪 Test ON' : '🧪 Test'}
             </button>
             <button
               onClick={handleReset}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-2 bg-gray-500 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-gray-600 transition-colors"
             >
               Reiniciar
             </button>
           </div>
         </div>
         
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem'
-        }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+        <div className="flex flex-col gap-2">
+          <h3 className="text-xl font-semibold">
             Cordilleras:
           </h3>
           {cordillerasRestantes.map(cordillera => (
@@ -171,14 +141,7 @@ export default function Juego() {
               key={cordillera.id}
               draggable
               onDragStart={(e) => handleDragStart(e, cordillera)}
-              style={{
-                padding: '1rem',
-                backgroundColor: '#007bff',
-                color: 'white',
-                borderRadius: '0.5rem',
-                cursor: 'grab',
-                fontWeight: '600'
-              }}
+              className="p-4 bg-blue-600 text-white rounded-lg cursor-grab font-semibold hover:bg-blue-700 transition-colors active:cursor-grabbing"
             >
               {cordillera.nombre}
             </div>
@@ -186,25 +149,14 @@ export default function Juego() {
         </div>
 
         {cordillerasFalladas.length > 0 && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            marginTop: '1rem'
-          }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#dc3545' }}>
+          <div className="flex flex-col gap-2 mt-4">
+            <h3 className="text-xl font-semibold text-red-600">
               Fallos:
             </h3>
             {cordillerasFalladas.map(cordillera => (
               <div
                 key={cordillera.id}
-                style={{
-                  padding: '1rem',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  borderRadius: '0.5rem',
-                  fontWeight: '600'
-                }}
+                className="p-4 bg-red-600 text-white rounded-lg font-semibold"
               >
                 {cordillera.nombre}
               </div>
@@ -213,41 +165,22 @@ export default function Juego() {
         )}
 
         {cordillerasRestantes.length === 0 && (
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#28a745',
-            color: 'white',
-            borderRadius: '0.5rem',
-            textAlign: 'center',
-            fontWeight: 'bold',
-            marginTop: '1rem'
-          }}>
+          <div className="p-4 bg-green-600 text-white rounded-lg text-center font-bold mt-4">
             ¡Completado! Puntuación final: {puntuacion}
           </div>
         )}
       </div>
 
-      <div style={{ flex: 2, position: 'relative' }}>
+      <div className="flex-[2] relative">
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: '600px',
-            border: '2px solid #333',
-            backgroundColor: '#e8f4f8'
-          }}
+          className="relative w-full h-[600px] border-2 border-gray-800 bg-blue-50 rounded-lg overflow-hidden shadow-lg"
         >
           <img
             src="/Blank_Spain_Map_(Provinces).svg.png"
             alt="Mapa de España"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              cursor: 'crosshair'
-            }}
+            className="w-full h-full object-contain cursor-crosshair"
           />
           
           {/* Modo Test: Mostrar todas las zonas correctas */}
@@ -257,83 +190,57 @@ export default function Juego() {
               {cordillera.width !== undefined && cordillera.height !== undefined ? (
                 <>
                   <div
+                    className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
                     style={{
-                      position: 'absolute',
                       left: `${(cordillera.x / 612.91315) * 100}%`,
                       top: `${(cordillera.y / 543.61902) * 100}%`,
                       width: `${(cordillera.width / 612.91315) * 100}%`,
                       height: `${(cordillera.height / 543.61902) * 100}%`,
-                      backgroundColor: 'rgba(40, 167, 69, 0.2)',
-                      border: '2px solid rgba(40, 167, 69, 0.8)',
                       transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
-                      zIndex: 5,
-                      pointerEvents: 'none'
+                      zIndex: 5
                     }}
                   />
                   <div
+                    className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                     style={{
-                      position: 'absolute',
                       left: `${(cordillera.x / 612.91315) * 100}%`,
                       top: `${(cordillera.y / 543.61902) * 100}%`,
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: '#28a745',
-                      borderRadius: '50%',
                       transform: 'translate(-50%, -50%)',
-                      zIndex: 6,
-                      pointerEvents: 'none'
+                      zIndex: 6
                     }}
                   />
                 </>
               ) : (
                 <>
                   <div
+                    className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
                     style={{
-                      position: 'absolute',
                       left: `${(cordillera.x / 612.91315) * 100}%`,
                       top: `${(cordillera.y / 543.61902) * 100}%`,
                       width: `${(cordillera.tolerancia * 2 / 612.91315) * 100}%`,
                       height: `${(cordillera.tolerancia * 2 / 543.61902) * 100}%`,
-                      border: '2px solid rgba(40, 167, 69, 0.6)',
-                      borderRadius: '50%',
                       transform: 'translate(-50%, -50%)',
-                      zIndex: 5,
-                      backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                      pointerEvents: 'none'
+                      zIndex: 5
                     }}
                   />
                   <div
+                    className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                     style={{
-                      position: 'absolute',
                       left: `${(cordillera.x / 612.91315) * 100}%`,
                       top: `${(cordillera.y / 543.61902) * 100}%`,
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: '#28a745',
-                      borderRadius: '50%',
                       transform: 'translate(-50%, -50%)',
-                      zIndex: 6,
-                      pointerEvents: 'none'
+                      zIndex: 6
                     }}
                   />
                 </>
               )}
               <div
+                className="absolute text-[10px] text-green-600 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-green-600 whitespace-nowrap pointer-events-none"
                 style={{
-                  position: 'absolute',
                   left: `${(cordillera.x / 612.91315) * 100}%`,
                   top: `${((cordillera.y - 20) / 543.61902) * 100}%`,
-                  fontSize: '10px',
-                  color: '#28a745',
-                  fontWeight: 'bold',
                   transform: 'translateX(-50%)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  zIndex: 7,
-                  whiteSpace: 'nowrap',
-                  border: '1px solid #28a745',
-                  pointerEvents: 'none'
+                  zIndex: 7
                 }}
               >
                 {cordillera.nombre}
@@ -346,32 +253,21 @@ export default function Juego() {
             return (
               <div key={colocada.cordilleraId}>
                 <div
+                  className="absolute w-4 h-4 bg-green-600 rounded-full"
                   style={{
-                    position: 'absolute',
                     left: `${(colocada.x / 612.91315) * 100}%`,
                     top: `${(colocada.y / 543.61902) * 100}%`,
-                    width: '16px',
-                    height: '16px',
-                    backgroundColor: '#28a745',
-                    borderRadius: '50%',
                     transform: 'translate(-50%, -50%)',
                     zIndex: 10
                   }}
                 />
                 <div
+                  className="absolute text-xs text-black font-bold bg-white/80 px-1 py-0.5 rounded whitespace-nowrap"
                   style={{
-                    position: 'absolute',
                     left: `${(colocada.x / 612.91315) * 100}%`,
                     top: `${((colocada.y - 12) / 543.61902) * 100}%`,
-                    fontSize: '12px',
-                    color: '#000',
-                    fontWeight: 'bold',
                     transform: 'translateX(-50%)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    padding: '2px 4px',
-                    borderRadius: '4px',
-                    zIndex: 11,
-                    whiteSpace: 'nowrap'
+                    zIndex: 11
                   }}
                 >
                   {cordillera?.nombre}
