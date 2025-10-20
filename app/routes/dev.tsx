@@ -125,8 +125,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         rotation: modoZona ? 0 : undefined
       };
       
-      // Añadir al estado local inmediatamente
-      setPuntos([...puntos, nuevoPunto]);
+      // Añadir al principio de la lista (orden invertido)
+      setPuntos([nuevoPunto, ...puntos]);
       setNombrePunto("");
       
       // Guardar en la base de datos
@@ -416,6 +416,19 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                           />
                         </div>
                       )}
+
+                      {/* Botón para finalizar edición */}
+                      <div className="mt-3 pt-3 border-t border-gray-300">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPuntoSeleccionado(null);
+                          }}
+                          className="w-full px-3 py-2 bg-green-600 text-white border-none rounded font-semibold cursor-pointer hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                          ✓ Finalizar Edición
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
