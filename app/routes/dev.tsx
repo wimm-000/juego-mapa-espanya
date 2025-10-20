@@ -84,6 +84,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const [puntoSeleccionado, setPuntoSeleccionado] = useState<string | null>(null);
   const [modoZona, setModoZona] = useState(false);
   const [puntoArrastrando, setPuntoArrastrando] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; nombre: string } | null>(null);
 
   // Combinar cordilleras de BD con puntos de localStorage en el estado inicial
   useEffect(() => {
@@ -175,22 +176,29 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   };
 
   const eliminarPunto = (id: string, nombre: string) => {
-    if (confirm(`¿Estás seguro de que quieres eliminar "${nombre}"?`)) {
-      // Eliminar del estado local
-      setPuntos(puntos.filter(p => p.id !== id));
-      if (puntoSeleccionado === id) {
-        setPuntoSeleccionado(null);
-      }
-      
-      // Eliminar de la base de datos si no es un ID generado temporalmente
-      // (los IDs de localStorage tienen formato timestamp-random)
-      if (!id.includes('-')) {
-        const formData = new FormData();
-        formData.append("intent", "delete");
-        formData.append("id", id);
-        fetcher.submit(formData, { method: "post" });
-      }
+    setConfirmDelete({ id, nombre });
+  };
+
+  const confirmarEliminacion = () => {
+    if (!confirmDelete) return;
+    
+    const { id } = confirmDelete;
+    
+    // Eliminar del estado local
+    setPuntos(puntos.filter(p => p.id !== id));
+    if (puntoSeleccionado === id) {
+      setPuntoSeleccionado(null);
     }
+    
+    // Eliminar de la base de datos si no es un ID generado temporalmente
+    if (!id.includes('-')) {
+      const formData = new FormData();
+      formData.append("intent", "delete");
+      formData.append("id", id);
+      fetcher.submit(formData, { method: "post" });
+    }
+    
+    setConfirmDelete(null);
   };
 
   const actualizarPunto = (id: string, cambios: Partial<Punto>) => {
@@ -553,6 +561,37 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           ))}
         </div>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">
+              ⚠️ Confirmar Eliminación
+            </h3>
+            <p className="text-gray-700 mb-6">
+              ¿Estás seguro de que quieres eliminar <strong>"{confirmDelete.nombre}"</strong>?
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 border-none rounded-lg font-semibold cursor-pointer hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarEliminacion}
+                className="flex-1 px-4 py-3 bg-red-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-red-700 transition-colors"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
