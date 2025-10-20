@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx app/db/seed.ts"
+    "db:seed": "tsx app/db/seed.ts",
+    "db:clear": "tsx app/db/clear.ts"
   },
   "dependencies": {
     "@react-router/node": "^7.9.2",

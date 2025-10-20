@@ -1,7 +1,7 @@
 import type { Route } from "./+types/dev";
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
-import { getAllCordilleras } from "../db/queries";
+import { Link, useFetcher } from "react-router";
+import { getAllCordilleras, deleteCordillera, updateCordillera, createCordillera } from "../db/queries";
 import type { Cordillera } from "../db/schema";
 
 interface Punto {
@@ -27,8 +27,56 @@ export async function loader() {
   return { cordilleras };
 }
 
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+  
+  if (intent === "delete") {
+    const id = formData.get("id") as string;
+    await deleteCordillera(id);
+  } else if (intent === "update") {
+    const id = formData.get("id") as string;
+    const data: Partial<Cordillera> = {};
+    
+    if (formData.has("x")) data.x = Number(formData.get("x"));
+    if (formData.has("y")) data.y = Number(formData.get("y"));
+    if (formData.has("nombre")) data.nombre = formData.get("nombre") as string;
+    if (formData.has("tolerancia")) data.tolerancia = Number(formData.get("tolerancia"));
+    if (formData.has("width")) {
+      const width = formData.get("width");
+      data.width = width ? Number(width) : null;
+    }
+    if (formData.has("height")) {
+      const height = formData.get("height");
+      data.height = height ? Number(height) : null;
+    }
+    if (formData.has("rotation")) {
+      const rotation = formData.get("rotation");
+      data.rotation = rotation ? Number(rotation) : null;
+    }
+    
+    await updateCordillera(id, data);
+  } else if (intent === "create") {
+    const newCordillera = {
+      id: `${Date.now()}`,
+      nombre: formData.get("nombre") as string,
+      x: Number(formData.get("x")),
+      y: Number(formData.get("y")),
+      tolerancia: Number(formData.get("tolerancia")),
+      width: formData.has("width") && formData.get("width") ? Number(formData.get("width")) : null,
+      height: formData.has("height") && formData.get("height") ? Number(formData.get("height")) : null,
+      rotation: formData.has("rotation") && formData.get("rotation") ? Number(formData.get("rotation")) : null,
+    };
+    
+    await createCordillera(newCordillera);
+  }
+  
+  return { success: true };
+}
+
 export default function Dev({ loaderData }: Route.ComponentProps) {
   const { cordilleras } = loaderData;
+  const fetcher = useFetcher();
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const [nombrePunto, setNombrePunto] = useState("");
   const [mostrarCordilleras, setMostrarCordilleras] = useState(true);
@@ -37,24 +85,23 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const [modoZona, setModoZona] = useState(false);
   const [puntoArrastrando, setPuntoArrastrando] = useState<string | null>(null);
 
-  // Cargar puntos desde localStorage al montar
+  // Combinar cordilleras de BD con puntos de localStorage en el estado inicial
   useEffect(() => {
-    const saved = localStorage.getItem('dev-cordilleras');
-    if (saved) {
-      try {
-        setPuntos(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error al cargar puntos guardados:', e);
-      }
-    }
-  }, []);
-
-  // Guardar puntos en localStorage cuando cambien
-  useEffect(() => {
-    if (puntos.length > 0) {
-      localStorage.setItem('dev-cordilleras', JSON.stringify(puntos));
-    }
-  }, [puntos]);
+    // Convertir cordilleras de BD a formato Punto para trabajar con ellas
+    const cordillerasAsPuntos: Punto[] = cordilleras.map(c => ({
+      id: c.id,
+      nombre: c.nombre,
+      x: c.x,
+      y: c.y,
+      tolerancia: c.tolerancia,
+      width: c.width ?? undefined,
+      height: c.height ?? undefined,
+      rotation: c.rotation ?? undefined,
+    }));
+    
+    setPuntos(cordillerasAsPuntos);
+    setMostrarCordilleras(false); // No necesitamos mostrar cordilleras separadas
+  }, [cordilleras]);
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (puntoSeleccionado || puntoArrastrando) return;
@@ -65,8 +112,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     const y = Math.round(((e.clientY - rect.top) / rect.height) * 543.61902);
     
     if (nombrePunto.trim()) {
+      const id = `${Date.now()}`;
       const nuevoPunto: Punto = {
-        id: `${Date.now()}-${Math.random()}`,
+        id,
         x,
         y,
         nombre: nombrePunto,
@@ -75,8 +123,25 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         height: modoZona ? 60 : undefined,
         rotation: modoZona ? 0 : undefined
       };
+      
+      // Añadir al estado local inmediatamente
       setPuntos([...puntos, nuevoPunto]);
       setNombrePunto("");
+      
+      // Guardar en la base de datos
+      const formData = new FormData();
+      formData.append("intent", "create");
+      formData.append("id", id);
+      formData.append("nombre", nuevoPunto.nombre);
+      formData.append("x", x.toString());
+      formData.append("y", y.toString());
+      formData.append("tolerancia", tolerancia.toString());
+      if (modoZona) {
+        formData.append("width", "100");
+        formData.append("height", "60");
+        formData.append("rotation", "0");
+      }
+      fetcher.submit(formData, { method: "post" });
     }
   };
 
@@ -109,14 +174,27 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     setPuntoArrastrando(null);
   };
 
-  const eliminarPunto = (id: string) => {
-    setPuntos(puntos.filter(p => p.id !== id));
-    if (puntoSeleccionado === id) {
-      setPuntoSeleccionado(null);
+  const eliminarPunto = (id: string, nombre: string) => {
+    if (confirm(`¿Estás seguro de que quieres eliminar "${nombre}"?`)) {
+      // Eliminar del estado local
+      setPuntos(puntos.filter(p => p.id !== id));
+      if (puntoSeleccionado === id) {
+        setPuntoSeleccionado(null);
+      }
+      
+      // Eliminar de la base de datos si no es un ID generado temporalmente
+      // (los IDs de localStorage tienen formato timestamp-random)
+      if (!id.includes('-')) {
+        const formData = new FormData();
+        formData.append("intent", "delete");
+        formData.append("id", id);
+        fetcher.submit(formData, { method: "post" });
+      }
     }
   };
 
   const actualizarPunto = (id: string, cambios: Partial<Punto>) => {
+    // Actualizar estado local
     setPuntos(puntos.map(p => {
       if (p.id === id) {
         if ('width' in cambios && cambios.width === undefined) {
@@ -127,6 +205,22 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
       }
       return p;
     }));
+    
+    // Persistir cambios en la base de datos si es un punto de DB (no temporal)
+    if (!id.includes('-')) {
+      const formData = new FormData();
+      formData.append("intent", "update");
+      formData.append("id", id);
+      
+      // Añadir solo los campos que han cambiado
+      Object.entries(cambios).forEach(([key, value]) => {
+        if (value !== undefined && key !== 'id') {
+          formData.append(key, value.toString());
+        }
+      });
+      
+      fetcher.submit(formData, { method: "post" });
+    }
   };
 
   const copiarCodigo = () => {
@@ -252,7 +346,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        eliminarPunto(punto.id);
+                        eliminarPunto(punto.id, punto.nombre);
                       }}
                       className="px-2 py-1 bg-red-600 text-white border-none rounded cursor-pointer text-xs hover:bg-red-700 transition-colors"
                     >
