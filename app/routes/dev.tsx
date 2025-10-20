@@ -457,8 +457,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           onClick={handleMapClick}
           onDragOver={handleMapDragOver}
           onDrop={handleMapDrop}
-          className="relative w-full h-[800px] border-2 border-gray-800 bg-cyan-50 rounded-lg overflow-hidden shadow-lg"
+          className="relative w-full border-2 border-gray-800 bg-cyan-50 rounded-lg overflow-hidden shadow-lg"
           style={{
+            aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`,
             cursor: puntoArrastrando ? 'grabbing' : 'crosshair'
           }}
         >

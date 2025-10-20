@@ -231,7 +231,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="relative w-full h-[600px] border-2 border-gray-800 bg-blue-50 rounded-lg overflow-hidden shadow-lg"
+          className="relative w-full border-2 border-gray-800 bg-blue-50 rounded-lg overflow-hidden shadow-lg"
+          style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}` }}
         >
           <img
             src="/mapa_relieve_espana_peq.jpg"
