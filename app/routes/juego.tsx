@@ -68,10 +68,12 @@ export default function Juego() {
       const dx = x - draggedCordillera.x;
       const dy = y - draggedCordillera.y;
       
-      // Aplicar rotación inversa
-      const rotation = (draggedCordillera.rotation || 0) * Math.PI / 180;
-      const rotatedX = dx * Math.cos(-rotation) - dy * Math.sin(-rotation);
-      const rotatedY = dx * Math.sin(-rotation) + dy * Math.cos(-rotation);
+      // Convertir la rotación de grados a radianes (negativo porque CSS rotación es en sentido horario)
+      const rotation = -(draggedCordillera.rotation || 0) * Math.PI / 180;
+      
+      // Rotar el punto al sistema de coordenadas del rectángulo no rotado
+      const rotatedX = dx * Math.cos(rotation) - dy * Math.sin(rotation);
+      const rotatedY = dx * Math.sin(rotation) + dy * Math.cos(rotation);
       
       // Verificar si está dentro del rectángulo
       esCorrecto = Math.abs(rotatedX) <= draggedCordillera.width / 2 && 
