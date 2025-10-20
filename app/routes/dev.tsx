@@ -1,7 +1,8 @@
 import type { Route } from "./+types/dev";
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import { cordilleras } from "../data/cordilleras";
+import { getAllCordilleras } from "../db/queries";
+import type { Cordillera } from "../db/schema";
 
 interface Punto {
   id: string;
@@ -21,7 +22,13 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Dev() {
+export async function loader() {
+  const cordilleras = await getAllCordilleras();
+  return { cordilleras };
+}
+
+export default function Dev({ loaderData }: Route.ComponentProps) {
+  const { cordilleras } = loaderData;
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const [nombrePunto, setNombrePunto] = useState("");
   const [mostrarCordilleras, setMostrarCordilleras] = useState(true);

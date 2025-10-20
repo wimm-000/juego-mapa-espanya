@@ -34,6 +34,29 @@ npm run dev
 
 Your application will be available at `http://localhost:5173`.
 
+### Database Setup
+
+This project uses SQLite with Drizzle ORM. To set up the database:
+
+```bash
+# Push schema to database
+npm run db:push
+
+# Seed the database with initial data
+npm run db:seed
+
+# Open Drizzle Studio (database GUI)
+npm run db:studio
+```
+
+#### Database Scripts
+
+- `npm run db:generate` - Generate migration files
+- `npm run db:migrate` - Run migrations
+- `npm run db:push` - Push schema directly to database (development)
+- `npm run db:studio` - Open Drizzle Studio
+- `npm run db:seed` - Seed database with initial cordilleras data
+
 ## Building for Production
 
 Create a production build:

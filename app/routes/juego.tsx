@@ -1,7 +1,8 @@
 import type { Route } from "./+types/juego";
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import { cordilleras, type Cordillera } from "../data/cordilleras";
+import type { Cordillera } from "../db/schema";
+import { getAllCordilleras } from "../db/queries";
 import confetti from "canvas-confetti";
 
 interface CordilleraColocada {
@@ -17,7 +18,13 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Juego() {
+export async function loader() {
+  const cordilleras = await getAllCordilleras();
+  return { cordilleras };
+}
+
+export default function Juego({ loaderData }: Route.ComponentProps) {
+  const { cordilleras } = loaderData;
   const [puntuacion, setPuntuacion] = useState(0);
   const [cordillerasColocadas, setCordillerasColocadas] = useState<CordilleraColocada[]>([]);
   const [cordillerasRestantes, setCordillerasRestantes] = useState<Cordillera[]>(cordilleras);
