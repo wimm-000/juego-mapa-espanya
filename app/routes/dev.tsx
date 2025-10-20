@@ -82,14 +82,13 @@ export default function Dev() {
   const actualizarPunto = (id: string, cambios: Partial<Punto>) => {
     setPuntos(puntos.map(p => {
       if (p.id === id) {
-        const actualizado = { ...p, ...cambios };
-        // Si width o height se ponen en undefined, también eliminar rotation
-        if (cambios.width === undefined || cambios.height === undefined) {
-          delete actualizado.width;
-          delete actualizado.height;
-          delete actualizado.rotation;
+        // Si explícitamente se pasa width o height como undefined, convertir a punto
+        if ('width' in cambios && cambios.width === undefined) {
+          const { width, height, rotation, ...resto } = p;
+          return { ...resto, ...cambios };
         }
-        return actualizado;
+        // De lo contrario, solo actualizar las propiedades que cambiaron
+        return { ...p, ...cambios };
       }
       return p;
     }));
