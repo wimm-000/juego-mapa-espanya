@@ -1,7 +1,8 @@
 import type { Route } from "./+types/juego";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { cordilleras, type Cordillera } from "../data/cordilleras";
+import confetti from "canvas-confetti";
 
 interface CordilleraColocada {
   cordilleraId: string;
@@ -23,6 +24,40 @@ export default function Juego() {
   const [cordillerasFalladas, setCordillerasFalladas] = useState<Cordillera[]>([]);
   const [draggedCordillera, setDraggedCordillera] = useState<Cordillera | null>(null);
   const [modoTest, setModoTest] = useState(false);
+  const [mostrarFelicitaciones, setMostrarFelicitaciones] = useState(false);
+
+  // Detectar cuando se completan todas las cordilleras
+  useEffect(() => {
+    if (cordillerasRestantes.length === 0 && cordillerasColocadas.length > 0) {
+      setMostrarFelicitaciones(true);
+      
+      // Lanzar confeti
+      const duration = 3000;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
+      frame();
+    }
+  }, [cordillerasRestantes, cordillerasColocadas]);
 
   const handleReset = () => {
     setPuntuacion(0);
@@ -30,6 +65,7 @@ export default function Juego() {
     setCordillerasRestantes(cordilleras);
     setCordillerasFalladas([]);
     setDraggedCordillera(null);
+    setMostrarFelicitaciones(false);
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, cordillera: Cordillera) => {
@@ -284,6 +320,41 @@ export default function Juego() {
           })}
         </div>
       </div>
+
+      {/* Modal de felicitaciones */}
+      {mostrarFelicitaciones && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setMostrarFelicitaciones(false)}>
+          <div className="bg-white rounded-2xl p-12 shadow-2xl text-center max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="text-6xl mb-6">🎉</div>
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">
+              ¡Felicidades!
+            </h2>
+            <p className="text-xl text-gray-600 mb-6">
+              Has completado todas las cordilleras correctamente
+            </p>
+            <p className="text-3xl font-bold text-green-600 mb-8">
+              Puntuación: {puntuacion}
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => setMostrarFelicitaciones(false)}
+                className="px-6 py-3 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={() => {
+                  setMostrarFelicitaciones(false);
+                  handleReset();
+                }}
+                className="px-6 py-3 bg-green-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-green-700 transition-colors"
+              >
+                Jugar de nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
