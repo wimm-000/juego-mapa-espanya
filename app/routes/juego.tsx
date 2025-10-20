@@ -1,5 +1,6 @@
 import type { Route } from "./+types/juego";
 import { useState } from "react";
+import { Link } from "react-router";
 import { cordilleras, type Cordillera } from "../data/cordilleras";
 
 interface CordilleraColocada {
@@ -117,6 +118,12 @@ export default function Juego() {
             Puntuación: {puntuacion}
           </h2>
           <div className="flex gap-2">
+            <Link
+              to="/"
+              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors no-underline"
+            >
+              🏠 Home
+            </Link>
             <button
               onClick={() => setModoTest(!modoTest)}
               className={`px-4 py-2 ${modoTest ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
