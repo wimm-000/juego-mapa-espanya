@@ -107,7 +107,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     let esCorrecto = false;
 
     // Si es una zona rectangular
-    if (draggedCordillera.width !== undefined && draggedCordillera.height !== undefined) {
+    if (draggedCordillera.width !== null && 
+        draggedCordillera.width !== undefined && 
+        draggedCordillera.height !== null && 
+        draggedCordillera.height !== undefined) {
       // Calcular el punto relativo al centro de la zona
       const dx = x - draggedCordillera.x;
       const dy = y - draggedCordillera.y;
@@ -234,18 +237,24 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
           />
           
           {/* Modo Test: Mostrar todas las zonas correctas */}
-          {modoTest && cordilleras.map((cordillera) => (
+          {modoTest && cordilleras.map((cordillera) => {
+            const tieneZonaRectangular = cordillera.width !== null && 
+                                        cordillera.width !== undefined && 
+                                        cordillera.height !== null && 
+                                        cordillera.height !== undefined;
+            
+            return (
             <div key={`test-${cordillera.id}`}>
               {/* Zona rectangular o punto circular */}
-              {cordillera.width !== undefined && cordillera.height !== undefined ? (
+              {tieneZonaRectangular ? (
                 <>
                   <div
                     className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
                     style={{
                       left: `${(cordillera.x / 612.91315) * 100}%`,
                       top: `${(cordillera.y / 543.61902) * 100}%`,
-                      width: `${(cordillera.width / 612.91315) * 100}%`,
-                      height: `${(cordillera.height / 543.61902) * 100}%`,
+                      width: `${(cordillera.width! / 612.91315) * 100}%`,
+                      height: `${(cordillera.height! / 543.61902) * 100}%`,
                       transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
                       zIndex: 5
                     }}
@@ -296,12 +305,49 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                 {cordillera.nombre}
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {cordillerasColocadas.map((colocada) => {
             const cordillera = cordilleras.find(c => c.id === colocada.cordilleraId);
+            if (!cordillera) return null;
+            
+            const tieneZonaRectangular = cordillera.width !== null && 
+                                        cordillera.width !== undefined && 
+                                        cordillera.height !== null && 
+                                        cordillera.height !== undefined;
+            
             return (
               <div key={colocada.cordilleraId}>
+                {/* Mostrar zona rectangular si aplica */}
+                {tieneZonaRectangular ? (
+                  <div
+                    className="absolute bg-green-600/10 border-2 border-green-600/60 pointer-events-none"
+                    style={{
+                      left: `${(colocada.x / 612.91315) * 100}%`,
+                      top: `${(colocada.y / 543.61902) * 100}%`,
+                      width: `${(cordillera.width! / 612.91315) * 100}%`,
+                      height: `${(cordillera.height! / 543.61902) * 100}%`,
+                      transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                      zIndex: 8
+                    }}
+                  />
+                ) : (
+                  /* Mostrar círculo de tolerancia para puntos circulares */
+                  <div
+                    className="absolute border-2 border-dashed border-green-600/40 rounded-full bg-green-600/5 pointer-events-none"
+                    style={{
+                      left: `${(colocada.x / 612.91315) * 100}%`,
+                      top: `${(colocada.y / 543.61902) * 100}%`,
+                      width: `${(cordillera.tolerancia * 2 / 612.91315) * 100}%`,
+                      height: `${(cordillera.tolerancia * 2 / 543.61902) * 100}%`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 8
+                    }}
+                  />
+                )}
+                
+                {/* Punto central */}
                 <div
                   className="absolute w-4 h-4 bg-green-600 rounded-full"
                   style={{
@@ -311,6 +357,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                     zIndex: 10
                   }}
                 />
+                
+                {/* Etiqueta con nombre */}
                 <div
                   className="absolute text-xs text-black font-bold bg-white/80 px-1 py-0.5 rounded whitespace-nowrap"
                   style={{
@@ -320,7 +368,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                     zIndex: 11
                   }}
                 >
-                  {cordillera?.nombre}
+                  {cordillera.nombre}
                 </div>
               </div>
             );
