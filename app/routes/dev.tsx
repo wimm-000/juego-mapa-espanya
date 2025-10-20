@@ -223,45 +223,20 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     }
   };
 
-  const copiarCodigo = () => {
-    const codigo = puntos.map(p => {
-      const base = `{
-    id: "${p.id}",
-    nombre: "${p.nombre}",
-    x: ${p.x},
-    y: ${p.y},
-    tolerancia: ${p.tolerancia}`;
-      
-      if (p.width !== undefined && p.height !== undefined) {
-        return base + `,
-    width: ${p.width},
-    height: ${p.height},
-    rotation: ${p.rotation || 0}
-  }`;
-      }
-      return base + '\n  }';
-    }).join(',\n  ');
-    
-    navigator.clipboard.writeText(`[\n  ${codigo}\n]`);
-    alert('✅ Código copiado al portapapeles!');
-  };
-
-  const limpiarTodo = () => {
-    if (confirm('¿Estás seguro de que quieres eliminar todos los puntos?')) {
-      setPuntos([]);
-      setPuntoSeleccionado(null);
-      localStorage.removeItem('dev-cordilleras');
-    }
-  };
-
-  const importarDesdeArchivo = () => {
-    const saved = localStorage.getItem('dev-cordilleras');
-    if (saved) {
-      const texto = JSON.stringify(JSON.parse(saved), null, 2);
-      navigator.clipboard.writeText(texto);
-      alert('✅ Datos exportados al portapapeles en formato JSON!');
-    }
-  };
+  useEffect(() => {
+    const cordillerasAsPuntos = cordilleras.map(c => ({
+      id: c.id,
+      nombre: c.nombre,
+      x: c.x,
+      y: c.y,
+      tolerancia: c.tolerancia,
+      width: c.width || undefined,
+      height: c.height || undefined,
+      rotation: c.rotation || undefined,
+    }));
+    setPuntos(cordillerasAsPuntos);
+    setMostrarCordilleras(false);
+  }, [cordilleras]);
 
   return (
     <div className="flex min-h-screen p-8 gap-8 bg-gray-100">
@@ -445,40 +420,15 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         <div className="bg-white p-6 rounded-lg shadow">
           <button
             onClick={() => setMostrarCordilleras(!mostrarCordilleras)}
-            className={`w-full px-4 py-2 ${mostrarCordilleras ? 'bg-green-600' : 'bg-gray-600'} text-white border-none rounded-lg font-semibold cursor-pointer mb-2 hover:opacity-90 transition-opacity`}
+            className={`w-full px-4 py-2 ${mostrarCordilleras ? 'bg-green-600' : 'bg-gray-600'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
             {mostrarCordilleras ? 'Ocultar' : 'Mostrar'} Cordilleras Existentes
           </button>
-          
-          {puntos.length > 0 && (
-            <>
-              <button
-                onClick={copiarCodigo}
-                className="w-full px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer mb-2 hover:bg-blue-700 transition-colors"
-              >
-                📋 Copiar Código
-              </button>
-
-              <button
-                onClick={importarDesdeArchivo}
-                className="w-full px-4 py-2 bg-cyan-600 text-white border-none rounded-lg font-semibold cursor-pointer mb-2 hover:bg-cyan-700 transition-colors"
-              >
-                💾 Exportar JSON
-              </button>
-              
-              <button
-                onClick={limpiarTodo}
-                className="w-full px-4 py-2 bg-red-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-red-700 transition-colors"
-              >
-                🗑️ Limpiar Todo
-              </button>
-            </>
-          )}
         </div>
       </div>
 
-      {/* Columna derecha: Mapa + Código */}
-      <div className="flex-[2] flex flex-col gap-4">
+      {/* Columna derecha: Mapa */}
+      <div className="flex-[2]">
         {/* Mapa */}
         <div
           onClick={handleMapClick}
@@ -602,26 +552,6 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
             </div>
           ))}
         </div>
-
-        {/* Código generado */}
-        {puntos.length > 0 && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800">
-              Código Generado
-            </h3>
-            <pre className="bg-gray-50 p-4 rounded text-xs overflow-auto max-h-72 text-gray-800">
-              {`[\n  ${puntos.map(p => 
-                `{
-    id: "${p.nombre.toLowerCase().replace(/\s+/g, '-')}",
-    nombre: "${p.nombre}",
-    x: ${p.x},
-    y: ${p.y},
-    tolerancia: ${tolerancia}
-  }`
-              ).join(',\n  ')}\n]`}
-            </pre>
-          </div>
-        )}
       </div>
     </div>
   );
