@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import type { Cordillera } from "../db/schema";
 import { getAllCordilleras } from "../db/queries";
 import confetti from "canvas-confetti";
+import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
 interface CordilleraColocada {
   cordilleraId: string;
@@ -101,8 +102,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 612.91315;
-    const y = ((e.clientY - rect.top) / rect.height) * 543.61902;
+    const x = ((e.clientX - rect.left) / rect.width) * MAP_WIDTH;
+    const y = ((e.clientY - rect.top) / rect.height) * MAP_HEIGHT;
 
     let esCorrecto = false;
 
@@ -233,7 +234,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
           className="relative w-full h-[600px] border-2 border-gray-800 bg-blue-50 rounded-lg overflow-hidden shadow-lg"
         >
           <img
-            src="/Blank_Spain_Map_(Provinces).svg.png"
+            src="/mapa_relieve_espana_peq.jpg"
             alt="Mapa de España"
             className="w-full h-full object-contain cursor-crosshair"
           />
@@ -253,10 +254,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / 612.91315) * 100}%`,
-                      top: `${(cordillera.y / 543.61902) * 100}%`,
-                      width: `${(cordillera.width! / 612.91315) * 100}%`,
-                      height: `${(cordillera.height! / 543.61902) * 100}%`,
+                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                      width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
+                      height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
                       transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
                       zIndex: 5
                     }}
@@ -264,8 +265,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / 612.91315) * 100}%`,
-                      top: `${(cordillera.y / 543.61902) * 100}%`,
+                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 6
                     }}
@@ -276,10 +277,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / 612.91315) * 100}%`,
-                      top: `${(cordillera.y / 543.61902) * 100}%`,
-                      width: `${(cordillera.tolerancia * 2 / 612.91315) * 100}%`,
-                      height: `${(cordillera.tolerancia * 2 / 543.61902) * 100}%`,
+                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                      width: `${(cordillera.tolerancia * 2 / MAP_WIDTH) * 100}%`,
+                      height: `${(cordillera.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 5
                     }}
@@ -287,8 +288,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / 612.91315) * 100}%`,
-                      top: `${(cordillera.y / 543.61902) * 100}%`,
+                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 6
                     }}
@@ -298,8 +299,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
               <div
                 className="absolute text-[10px] text-green-600 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-green-600 whitespace-nowrap pointer-events-none"
                 style={{
-                  left: `${(cordillera.x / 612.91315) * 100}%`,
-                  top: `${((cordillera.y - 20) / 543.61902) * 100}%`,
+                  left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                  top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
                   transform: 'translateX(-50%)',
                   zIndex: 7
                 }}
@@ -326,10 +327,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute bg-green-600/10 border-2 border-green-600/60 pointer-events-none"
                     style={{
-                      left: `${(colocada.x / 612.91315) * 100}%`,
-                      top: `${(colocada.y / 543.61902) * 100}%`,
-                      width: `${(cordillera.width! / 612.91315) * 100}%`,
-                      height: `${(cordillera.height! / 543.61902) * 100}%`,
+                      left: `${(colocada.x / MAP_WIDTH) * 100}%`,
+                      top: `${(colocada.y / MAP_HEIGHT) * 100}%`,
+                      width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
+                      height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
                       transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
                       zIndex: 8
                     }}
@@ -339,10 +340,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute border-2 border-dashed border-green-600/40 rounded-full bg-green-600/5 pointer-events-none"
                     style={{
-                      left: `${(colocada.x / 612.91315) * 100}%`,
-                      top: `${(colocada.y / 543.61902) * 100}%`,
-                      width: `${(cordillera.tolerancia * 2 / 612.91315) * 100}%`,
-                      height: `${(cordillera.tolerancia * 2 / 543.61902) * 100}%`,
+                      left: `${(colocada.x / MAP_WIDTH) * 100}%`,
+                      top: `${(colocada.y / MAP_HEIGHT) * 100}%`,
+                      width: `${(cordillera.tolerancia * 2 / MAP_WIDTH) * 100}%`,
+                      height: `${(cordillera.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 8
                     }}
@@ -353,8 +354,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                 <div
                   className="absolute w-4 h-4 bg-green-600 rounded-full"
                   style={{
-                    left: `${(colocada.x / 612.91315) * 100}%`,
-                    top: `${(colocada.y / 543.61902) * 100}%`,
+                    left: `${(colocada.x / MAP_WIDTH) * 100}%`,
+                    top: `${(colocada.y / MAP_HEIGHT) * 100}%`,
                     transform: 'translate(-50%, -50%)',
                     zIndex: 10
                   }}
@@ -364,8 +365,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                 <div
                   className="absolute text-xs text-black font-bold bg-white/80 px-1 py-0.5 rounded whitespace-nowrap"
                   style={{
-                    left: `${(colocada.x / 612.91315) * 100}%`,
-                    top: `${((colocada.y - 12) / 543.61902) * 100}%`,
+                    left: `${(colocada.x / MAP_WIDTH) * 100}%`,
+                    top: `${((colocada.y - 12) / MAP_HEIGHT) * 100}%`,
                     transform: 'translateX(-50%)',
                     zIndex: 11
                   }}

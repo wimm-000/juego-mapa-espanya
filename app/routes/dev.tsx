@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useFetcher } from "react-router";
 import { getAllCordilleras, deleteCordillera, updateCordillera, createCordillera } from "../db/queries";
 import type { Cordillera } from "../db/schema";
+import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
 interface Punto {
   id: string;
@@ -110,8 +111,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * 612.91315);
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * 543.61902);
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
+    const y = Math.round(((e.clientX - rect.top) / rect.height) * MAP_HEIGHT);
     
     if (nombrePunto.trim()) {
       const id = `${Date.now()}`;
@@ -169,8 +170,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * 612.91315);
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * 543.61902);
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * MAP_HEIGHT);
 
     actualizarPunto(puntoArrastrando, { x, y });
     setPuntoArrastrando(null);
@@ -462,7 +463,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           }}
         >
           <img
-            src="/Blank_Spain_Map_(Provinces).svg.png"
+            src="/mapa_relieve_espana_peq.jpg"
             alt="Mapa de España"
             className="w-full h-full object-contain pointer-events-none"
           />
@@ -473,16 +474,16 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               <div
                 className="absolute w-3 h-3 bg-red-600/60 rounded-full border-2 border-red-600 z-[5]"
                 style={{
-                  left: `${(cordillera.x / 612.91315) * 100}%`,
-                  top: `${(cordillera.y / 543.61902) * 100}%`,
+                  left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                  top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               />
               <div
                 className="absolute text-[10px] text-red-600 font-bold bg-white/95 px-1.5 py-0.5 rounded z-[6] whitespace-nowrap border border-red-600"
                 style={{
-                  left: `${(cordillera.x / 612.91315) * 100}%`,
-                  top: `${((cordillera.y - 20) / 543.61902) * 100}%`,
+                  left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                  top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
                   transform: 'translateX(-50%)'
                 }}
               >
@@ -507,10 +508,10 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                         : 'bg-blue-600/15 border-blue-600/70 z-10 cursor-grab'
                   }`}
                   style={{
-                    left: `${(punto.x / 612.91315) * 100}%`,
-                    top: `${(punto.y / 543.61902) * 100}%`,
-                    width: `${(punto.width / 612.91315) * 100}%`,
-                    height: `${(punto.height / 543.61902) * 100}%`,
+                    left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                    top: `${(punto.y / MAP_HEIGHT) * 100}%`,
+                    width: `${(punto.width / MAP_WIDTH) * 100}%`,
+                    height: `${(punto.height / MAP_HEIGHT) * 100}%`,
                     transform: `translate(-50%, -50%) rotate(${punto.rotation || 0}deg)`
                   }}
                   onClick={(e) => {
@@ -531,8 +532,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                         : 'bg-blue-600/70 z-10 cursor-grab'
                   }`}
                   style={{
-                    left: `${(punto.x / 612.91315) * 100}%`,
-                    top: `${(punto.y / 543.61902) * 100}%`,
+                    left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                    top: `${(punto.y / MAP_HEIGHT) * 100}%`,
                     transform: 'translate(-50%, -50%)',
                     borderWidth: puntoSeleccionado === punto.id ? '3px' : '2px'
                   }}
@@ -550,8 +551,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                     : 'bg-white/95 text-blue-600 border-blue-600 z-[11]'
                 }`}
                 style={{
-                  left: `${(punto.x / 612.91315) * 100}%`,
-                  top: `${((punto.y - 20) / 543.61902) * 100}%`,
+                  left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                  top: `${((punto.y - 20) / MAP_HEIGHT) * 100}%`,
                   transform: 'translateX(-50%)',
                   borderWidth: puntoSeleccionado === punto.id ? '2px' : '1px'
                 }}
@@ -563,10 +564,10 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                 <div
                   className="absolute border border-dashed border-blue-600/40 rounded-full z-[5] pointer-events-none"
                   style={{
-                    left: `${(punto.x / 612.91315) * 100}%`,
-                    top: `${(punto.y / 543.61902) * 100}%`,
-                    width: `${(punto.tolerancia * 2 / 612.91315) * 100}%`,
-                    height: `${(punto.tolerancia * 2 / 543.61902) * 100}%`,
+                    left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                    top: `${(punto.y / MAP_HEIGHT) * 100}%`,
+                    width: `${(punto.tolerancia * 2 / MAP_WIDTH) * 100}%`,
+                    height: `${(punto.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
                     transform: 'translate(-50%, -50%)'
                   }}
                 />
