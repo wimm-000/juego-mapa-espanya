@@ -100,7 +100,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
       rotation: c.rotation ?? undefined,
     }));
     
-    setPuntos(cordillerasAsPuntos);
+    // Invertir el orden para mostrar los más recientes primero
+    setPuntos(cordillerasAsPuntos.reverse());
     setMostrarCordilleras(false); // No necesitamos mostrar cordilleras separadas
   }, [cordilleras]);
 
