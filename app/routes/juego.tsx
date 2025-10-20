@@ -159,30 +159,25 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   return (
     <div className="flex min-h-screen p-8 gap-8">
       <div className="flex-1 flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">
-            Puntuación: {puntuacion}
-          </h2>
-          <div className="flex gap-2">
-            <Link
-              to="/"
-              className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors no-underline"
-            >
-              🏠 Home
-            </Link>
-            <button
-              onClick={() => setModoTest(!modoTest)}
-              className={`px-4 py-2 ${modoTest ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
-            >
-              {modoTest ? '🧪 Test ON' : '🧪 Test'}
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 bg-gray-500 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-gray-600 transition-colors"
-            >
-              Reiniciar
-            </button>
-          </div>
+        <div className="flex gap-2">
+          <Link
+            to="/"
+            className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors no-underline"
+          >
+            🏠 Home
+          </Link>
+          <button
+            onClick={() => setModoTest(!modoTest)}
+            className={`px-4 py-2 ${modoTest ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+          >
+            {modoTest ? '🧪 Test ON' : '🧪 Test'}
+          </button>
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 bg-gray-500 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-gray-600 transition-colors"
+          >
+            Reiniciar
+          </button>
         </div>
         
         <div className="flex flex-col gap-2">
@@ -225,6 +220,13 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
       </div>
 
       <div className="flex-[2] relative">
+        {/* Puntuación en esquina superior derecha */}
+        <div className="absolute top-4 right-4 z-50 bg-white px-6 py-3 rounded-lg shadow-lg border-2 border-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Puntuación: {puntuacion}
+          </h2>
+        </div>
+
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
