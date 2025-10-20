@@ -39,33 +39,37 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     if (cordillerasRestantes.length === 0 && cordillerasColocadas.length > 0) {
       setMostrarFelicitaciones(true);
       
-      // Lanzar confeti
-      const duration = 3000;
-      const end = Date.now() + duration;
+      // Lanzar confeti SOLO si no hay fallos (puntuación perfecta)
+      const puntuacionPerfecta = cordillerasFalladas.length === 0;
+      
+      if (puntuacionPerfecta) {
+        const duration = 3000;
+        const end = Date.now() + duration;
 
-      const frame = () => {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
-        });
+        const frame = () => {
+          confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+          });
+          confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+          });
 
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-      frame();
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        };
+        frame();
+      }
     }
-  }, [cordillerasRestantes, cordillerasColocadas]);
+  }, [cordillerasRestantes, cordillerasColocadas, cordillerasFalladas]);
 
   const handleReset = () => {
     setPuntuacion(0);
@@ -384,16 +388,36 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
       {mostrarFelicitaciones && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setMostrarFelicitaciones(false)}>
           <div className="bg-white rounded-2xl p-12 shadow-2xl text-center max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="text-6xl mb-6">🎉</div>
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">
-              ¡Felicidades!
-            </h2>
-            <p className="text-xl text-gray-600 mb-6">
-              Has completado todas las cordilleras correctamente
-            </p>
-            <p className="text-3xl font-bold text-green-600 mb-8">
-              Puntuación: {puntuacion}
-            </p>
+            {cordillerasFalladas.length === 0 ? (
+              <>
+                <div className="text-6xl mb-6">🎉</div>
+                <h2 className="text-4xl font-bold text-gray-800 mb-4">
+                  ¡Perfecto!
+                </h2>
+                <p className="text-xl text-gray-600 mb-6">
+                  Has acertado todas las cordilleras sin fallos
+                </p>
+                <p className="text-3xl font-bold text-green-600 mb-8">
+                  Puntuación: {puntuacion}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-6">✅</div>
+                <h2 className="text-4xl font-bold text-gray-800 mb-4">
+                  ¡Completado!
+                </h2>
+                <p className="text-xl text-gray-600 mb-4">
+                  Has terminado el juego
+                </p>
+                <p className="text-3xl font-bold text-green-600 mb-2">
+                  Puntuación: {puntuacion}
+                </p>
+                <p className="text-sm text-red-600 mb-6">
+                  Fallos: {cordillerasFalladas.length}
+                </p>
+              </>
+            )}
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => setMostrarFelicitaciones(false)}
