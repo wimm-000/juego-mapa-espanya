@@ -4,6 +4,9 @@ export interface Cordillera {
   x: number;
   y: number;
   tolerancia: number;
+  width?: number;
+  height?: number;
+  rotation?: number;
 }
 
 export const cordilleras: Cordillera[] = [

@@ -21,6 +21,7 @@ export default function Juego() {
   const [cordillerasRestantes, setCordillerasRestantes] = useState<Cordillera[]>(cordilleras);
   const [cordillerasFalladas, setCordillerasFalladas] = useState<Cordillera[]>([]);
   const [draggedCordillera, setDraggedCordillera] = useState<Cordillera | null>(null);
+  const [modoTest, setModoTest] = useState(false);
 
   const handleReset = () => {
     setPuntuacion(0);
@@ -59,11 +60,31 @@ export default function Juego() {
     const x = ((e.clientX - rect.left) / rect.width) * 612.91315;
     const y = ((e.clientY - rect.top) / rect.height) * 543.61902;
 
-    const distancia = Math.sqrt(
-      Math.pow(x - draggedCordillera.x, 2) + Math.pow(y - draggedCordillera.y, 2)
-    );
+    let esCorrecto = false;
 
-    if (distancia <= draggedCordillera.tolerancia) {
+    // Si es una zona rectangular
+    if (draggedCordillera.width !== undefined && draggedCordillera.height !== undefined) {
+      // Calcular el punto relativo al centro de la zona
+      const dx = x - draggedCordillera.x;
+      const dy = y - draggedCordillera.y;
+      
+      // Aplicar rotación inversa
+      const rotation = (draggedCordillera.rotation || 0) * Math.PI / 180;
+      const rotatedX = dx * Math.cos(-rotation) - dy * Math.sin(-rotation);
+      const rotatedY = dx * Math.sin(-rotation) + dy * Math.cos(-rotation);
+      
+      // Verificar si está dentro del rectángulo
+      esCorrecto = Math.abs(rotatedX) <= draggedCordillera.width / 2 && 
+                   Math.abs(rotatedY) <= draggedCordillera.height / 2;
+    } else {
+      // Si es un punto circular, usar tolerancia
+      const distancia = Math.sqrt(
+        Math.pow(x - draggedCordillera.x, 2) + Math.pow(y - draggedCordillera.y, 2)
+      );
+      esCorrecto = distancia <= draggedCordillera.tolerancia;
+    }
+
+    if (esCorrecto) {
       setPuntuacion(puntuacion + 100);
       setCordillerasColocadas([
         ...cordillerasColocadas,
@@ -103,20 +124,36 @@ export default function Juego() {
           <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
             Puntuación: {puntuacion}
           </h2>
-          <button
-            onClick={handleReset}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.5rem',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
-          >
-            Reiniciar
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setModoTest(!modoTest)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: modoTest ? '#ffc107' : '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              {modoTest ? '🧪 Test ON' : '🧪 Test'}
+            </button>
+            <button
+              onClick={handleReset}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Reiniciar
+            </button>
+          </div>
         </div>
         
         <div style={{
@@ -211,6 +248,97 @@ export default function Juego() {
             }}
           />
           
+          {/* Modo Test: Mostrar todas las zonas correctas */}
+          {modoTest && cordilleras.map((cordillera) => (
+            <div key={`test-${cordillera.id}`}>
+              {/* Zona rectangular o punto circular */}
+              {cordillera.width !== undefined && cordillera.height !== undefined ? (
+                <>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${(cordillera.x / 612.91315) * 100}%`,
+                      top: `${(cordillera.y / 543.61902) * 100}%`,
+                      width: `${(cordillera.width / 612.91315) * 100}%`,
+                      height: `${(cordillera.height / 543.61902) * 100}%`,
+                      backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                      border: '2px solid rgba(40, 167, 69, 0.8)',
+                      transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                      zIndex: 5,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${(cordillera.x / 612.91315) * 100}%`,
+                      top: `${(cordillera.y / 543.61902) * 100}%`,
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#28a745',
+                      borderRadius: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 6,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${(cordillera.x / 612.91315) * 100}%`,
+                      top: `${(cordillera.y / 543.61902) * 100}%`,
+                      width: `${(cordillera.tolerancia * 2 / 612.91315) * 100}%`,
+                      height: `${(cordillera.tolerancia * 2 / 543.61902) * 100}%`,
+                      border: '2px solid rgba(40, 167, 69, 0.6)',
+                      borderRadius: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 5,
+                      backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                      pointerEvents: 'none'
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${(cordillera.x / 612.91315) * 100}%`,
+                      top: `${(cordillera.y / 543.61902) * 100}%`,
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#28a745',
+                      borderRadius: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 6,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                </>
+              )}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${(cordillera.x / 612.91315) * 100}%`,
+                  top: `${((cordillera.y - 20) / 543.61902) * 100}%`,
+                  fontSize: '10px',
+                  color: '#28a745',
+                  fontWeight: 'bold',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  zIndex: 7,
+                  whiteSpace: 'nowrap',
+                  border: '1px solid #28a745',
+                  pointerEvents: 'none'
+                }}
+              >
+                {cordillera.nombre}
+              </div>
+            </div>
+          ))}
+
           {cordillerasColocadas.map((colocada) => {
             const cordillera = cordilleras.find(c => c.id === colocada.cordilleraId);
             return (
