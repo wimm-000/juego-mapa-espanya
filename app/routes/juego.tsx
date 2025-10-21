@@ -2,7 +2,7 @@ import type { Route } from "./+types/juego";
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import type { Cordillera } from "../db/schema";
-import { getAllCordilleras } from "../db/queries";
+import { getAllCordilleras, getSettings } from "../db/queries";
 import confetti from "canvas-confetti";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
@@ -21,28 +21,35 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader() {
   const cordilleras = await getAllCordilleras();
-  return { cordilleras };
+  const settings = await getSettings();
+  return { cordilleras, testMode: settings.testMode };
 }
 
 export default function Juego({ loaderData }: Route.ComponentProps) {
-  const { cordilleras } = loaderData;
+  const { cordilleras, testMode } = loaderData;
   const [puntuacion, setPuntuacion] = useState(0);
-  const [cordillerasColocadas, setCordillerasColocadas] = useState<CordilleraColocada[]>([]);
-  const [cordillerasRestantes, setCordillerasRestantes] = useState<Cordillera[]>(cordilleras);
-  const [cordillerasFalladas, setCordillerasFalladas] = useState<Cordillera[]>([]);
-  const [draggedCordillera, setDraggedCordillera] = useState<Cordillera | null>(null);
+  const [cordillerasColocadas, setCordillerasColocadas] = useState<
+    CordilleraColocada[]
+  >([]);
+  const [cordillerasRestantes, setCordillerasRestantes] =
+    useState<Cordillera[]>(cordilleras);
+  const [cordillerasFalladas, setCordillerasFalladas] = useState<Cordillera[]>(
+    [],
+  );
+  const [draggedCordillera, setDraggedCordillera] = useState<Cordillera | null>(
+    null,
+  );
   const [mostrarAreas, setMostrarAreas] = useState(false);
-  // const [modoTest, setModoTest] = useState(false);
   const [mostrarFelicitaciones, setMostrarFelicitaciones] = useState(false);
 
   // Detectar cuando se completan todas las cordilleras
   useEffect(() => {
     if (cordillerasRestantes.length === 0 && cordillerasColocadas.length > 0) {
       setMostrarFelicitaciones(true);
-      
+
       // Lanzar confeti SOLO si no hay fallos (puntuación perfecta)
       const puntuacionPerfecta = cordillerasFalladas.length === 0;
-      
+
       if (puntuacionPerfecta) {
         const duration = 3000;
         const end = Date.now() + duration;
@@ -53,14 +60,14 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             angle: 60,
             spread: 55,
             origin: { x: 0 },
-            colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+            colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff"],
           });
           confetti({
             particleCount: 3,
             angle: 120,
             spread: 55,
             origin: { x: 1 },
-            colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+            colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff"],
           });
 
           if (Date.now() < end) {
@@ -81,23 +88,26 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     setMostrarFelicitaciones(false);
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, cordillera: Cordillera) => {
+  const handleDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    cordillera: Cordillera,
+  ) => {
     setDraggedCordillera(cordillera);
-    
-    const canvas = document.createElement('canvas');
+
+    const canvas = document.createElement("canvas");
     canvas.width = 40;
     canvas.height = 40;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = '#007bff';
+      ctx.fillStyle = "#007bff";
       ctx.beginPath();
       ctx.arc(20, 20, 18, 0, 2 * Math.PI);
       ctx.fill();
-      ctx.strokeStyle = '#fff';
+      ctx.strokeStyle = "#fff";
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-    
+
     e.dataTransfer.setDragImage(canvas, 20, 20);
   };
 
@@ -113,28 +123,32 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     let esCorrecto = false;
 
     // Si es una zona rectangular
-    if (draggedCordillera.width !== null && 
-        draggedCordillera.width !== undefined && 
-        draggedCordillera.height !== null && 
-        draggedCordillera.height !== undefined) {
+    if (
+      draggedCordillera.width !== null &&
+      draggedCordillera.width !== undefined &&
+      draggedCordillera.height !== null &&
+      draggedCordillera.height !== undefined
+    ) {
       // Calcular el punto relativo al centro de la zona
       const dx = x - draggedCordillera.x;
       const dy = y - draggedCordillera.y;
-      
+
       // Convertir la rotación de grados a radianes (negativo porque CSS rotación es en sentido horario)
-      const rotation = -(draggedCordillera.rotation || 0) * Math.PI / 180;
-      
+      const rotation = (-(draggedCordillera.rotation || 0) * Math.PI) / 180;
+
       // Rotar el punto al sistema de coordenadas del rectángulo no rotado
       const rotatedX = dx * Math.cos(rotation) - dy * Math.sin(rotation);
       const rotatedY = dx * Math.sin(rotation) + dy * Math.cos(rotation);
-      
+
       // Verificar si está dentro del rectángulo
-      esCorrecto = Math.abs(rotatedX) <= draggedCordillera.width / 2 && 
-                   Math.abs(rotatedY) <= draggedCordillera.height / 2;
+      esCorrecto =
+        Math.abs(rotatedX) <= draggedCordillera.width / 2 &&
+        Math.abs(rotatedY) <= draggedCordillera.height / 2;
     } else {
       // Si es un punto circular, usar tolerancia
       const distancia = Math.sqrt(
-        Math.pow(x - draggedCordillera.x, 2) + Math.pow(y - draggedCordillera.y, 2)
+        Math.pow(x - draggedCordillera.x, 2) +
+          Math.pow(y - draggedCordillera.y, 2),
       );
       esCorrecto = distancia <= draggedCordillera.tolerancia;
     }
@@ -143,15 +157,19 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
       setPuntuacion(puntuacion + 100);
       setCordillerasColocadas([
         ...cordillerasColocadas,
-        { cordilleraId: draggedCordillera.id, x: draggedCordillera.x, y: draggedCordillera.y }
+        {
+          cordilleraId: draggedCordillera.id,
+          x: draggedCordillera.x,
+          y: draggedCordillera.y,
+        },
       ]);
       setCordillerasRestantes(
-        cordillerasRestantes.filter(c => c.id !== draggedCordillera.id)
+        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
       );
     } else {
       setCordillerasFalladas([...cordillerasFalladas, draggedCordillera]);
       setCordillerasRestantes(
-        cordillerasRestantes.filter(c => c.id !== draggedCordillera.id)
+        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
       );
     }
 
@@ -174,9 +192,9 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
           </Link>
           <button
             onClick={() => setMostrarAreas(!mostrarAreas)}
-            className={`px-4 py-2 ${mostrarAreas ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+            className={`px-4 py-2 ${mostrarAreas ? "bg-yellow-500" : "bg-gray-500"} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
-            {mostrarAreas ? '📍 Áreas ON' : '📍 Mostrar Áreas'}
+            {mostrarAreas ? "📍 Áreas ON" : "📍 Mostrar Áreas"}
           </button>
           {/* <button
             onClick={() => setModoTest(!modoTest)}
@@ -191,29 +209,27 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             Reiniciar
           </button>
         </div>
-        
+
         <div className="flex flex-col gap-2">
-          <h3 className="text-xl font-semibold">
-            Cordilleras:
-          </h3>
-          {cordillerasRestantes.map(cordillera => (
-            <div
-              key={cordillera.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, cordillera)}
-              className="p-4 bg-blue-600 text-white rounded-lg cursor-grab font-semibold hover:bg-blue-700 transition-colors active:cursor-grabbing"
-            >
-              {cordillera.nombre}
-            </div>
-          ))}
+          <h3 className="text-xl font-semibold">Cordilleras:</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {cordillerasRestantes.map((cordillera) => (
+              <div
+                key={cordillera.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, cordillera)}
+                className="p-4 bg-blue-600 text-white rounded-lg cursor-grab font-semibold hover:bg-blue-700 transition-colors active:cursor-grabbing"
+              >
+                {cordillera.nombre}
+              </div>
+            ))}
+          </div>
         </div>
 
         {cordillerasFalladas.length > 0 && (
           <div className="flex flex-col gap-2 mt-4">
-            <h3 className="text-xl font-semibold text-red-600">
-              Fallos:
-            </h3>
-            {cordillerasFalladas.map(cordillera => (
+            <h3 className="text-xl font-semibold text-red-600">Fallos:</h3>
+            {cordillerasFalladas.map((cordillera) => (
               <div
                 key={cordillera.id}
                 className="p-4 bg-red-600 text-white rounded-lg font-semibold"
@@ -250,47 +266,48 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             alt="Mapa de España"
             className="w-full h-full object-contain cursor-crosshair"
           />
-          
-          {/* Modo Mostrar Áreas: Mostrar solo las zonas sin texto */}
-          {mostrarAreas && cordilleras.map((cordillera) => {
-            const tieneZonaRectangular = cordillera.width !== null && 
-                                        cordillera.width !== undefined && 
-                                        cordillera.height !== null && 
-                                        cordillera.height !== undefined;
-            
-            return (
-            <div key={`area-${cordillera.id}`}>
-              {tieneZonaRectangular ? (
-                <div
-                  className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
-                  style={{
-                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                    top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                    width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
-                    height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
-                    transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
-                    zIndex: 5
-                  }}
-                />
-              ) : (
-                <div
-                  className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
-                  style={{
-                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                    top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                    width: `${(cordillera.tolerancia * 2 / MAP_WIDTH) * 100}%`,
-                    height: `${(cordillera.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 5
-                  }}
-                />
-              )}
-            </div>
-            );
-          })}
 
-          {/* Modo Test: Mostrar todas las zonas correctas */}
-          {/* {modoTest && cordilleras.map((cordillera) => {
+          {/* Modo Mostrar Áreas: Mostrar solo las zonas sin texto */}
+          {mostrarAreas &&
+            cordilleras.map((cordillera) => {
+              const tieneZonaRectangular =
+                cordillera.width !== null &&
+                cordillera.width !== undefined &&
+                cordillera.height !== null &&
+                cordillera.height !== undefined;
+
+              return (
+                <div key={`area-${cordillera.id}`}>
+                  {tieneZonaRectangular ? (
+                    <div
+                      className="absolute bg-red-600/20 border-2 border-red-600/80 pointer-events-none"
+                      style={{
+                        left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                        top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                        width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
+                        height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
+                        transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                        zIndex: 5,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="absolute border-2 border-red-600/60 rounded-full bg-red-600/10 pointer-events-none"
+                      style={{
+                        left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                        top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                        width: `${((cordillera.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                        height: `${((cordillera.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                        transform: "translate(-50%, -50%)",
+                        zIndex: 5,
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+
+          {testMode && cordilleras.map((cordillera) => {
             const tieneZonaRectangular = cordillera.width !== null && 
                                         cordillera.width !== undefined && 
                                         cordillera.height !== null && 
@@ -358,17 +375,20 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
             );
-          })} */}
+          })}
 
           {cordillerasColocadas.map((colocada) => {
-            const cordillera = cordilleras.find(c => c.id === colocada.cordilleraId);
+            const cordillera = cordilleras.find(
+              (c) => c.id === colocada.cordilleraId,
+            );
             if (!cordillera) return null;
-            
-            const tieneZonaRectangular = cordillera.width !== null && 
-                                        cordillera.width !== undefined && 
-                                        cordillera.height !== null && 
-                                        cordillera.height !== undefined;
-            
+
+            const tieneZonaRectangular =
+              cordillera.width !== null &&
+              cordillera.width !== undefined &&
+              cordillera.height !== null &&
+              cordillera.height !== undefined;
+
             return (
               <div key={colocada.cordilleraId}>
                 {/* Mostrar zona rectangular si aplica */}
@@ -381,7 +401,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                       width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
                       height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
                       transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
-                      zIndex: 8
+                      zIndex: 8,
                     }}
                   />
                 ) : (
@@ -391,33 +411,33 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                     style={{
                       left: `${(colocada.x / MAP_WIDTH) * 100}%`,
                       top: `${(colocada.y / MAP_HEIGHT) * 100}%`,
-                      width: `${(cordillera.tolerancia * 2 / MAP_WIDTH) * 100}%`,
-                      height: `${(cordillera.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 8
+                      width: `${((cordillera.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                      height: `${((cordillera.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 8,
                     }}
                   />
                 )}
-                
+
                 {/* Punto central */}
                 <div
                   className="absolute w-4 h-4 bg-green-600 rounded-full"
                   style={{
                     left: `${(colocada.x / MAP_WIDTH) * 100}%`,
                     top: `${(colocada.y / MAP_HEIGHT) * 100}%`,
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 10
+                    transform: "translate(-50%, -50%)",
+                    zIndex: 10,
                   }}
                 />
-                
+
                 {/* Etiqueta con nombre */}
                 <div
                   className="absolute text-xs text-black font-bold bg-white/80 px-1 py-0.5 rounded whitespace-nowrap"
                   style={{
                     left: `${(colocada.x / MAP_WIDTH) * 100}%`,
                     top: `${((colocada.y - 12) / MAP_HEIGHT) * 100}%`,
-                    transform: 'translateX(-50%)',
-                    zIndex: 11
+                    transform: "translateX(-50%)",
+                    zIndex: 11,
                   }}
                 >
                   {cordillera.nombre}
@@ -430,8 +450,14 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 
       {/* Modal de felicitaciones */}
       {mostrarFelicitaciones && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setMostrarFelicitaciones(false)}>
-          <div className="bg-white rounded-2xl p-12 shadow-2xl text-center max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setMostrarFelicitaciones(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-12 shadow-2xl text-center max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             {cordillerasFalladas.length === 0 ? (
               <>
                 <div className="text-6xl mb-6">🎉</div>

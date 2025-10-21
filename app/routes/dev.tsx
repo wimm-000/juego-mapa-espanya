@@ -1,7 +1,7 @@
 import type { Route } from "./+types/dev";
 import { useState, useEffect } from "react";
 import { Link, useFetcher } from "react-router";
-import { getAllCordilleras, deleteCordillera, updateCordillera, createCordillera } from "../db/queries";
+import { getAllCordilleras, deleteCordillera, updateCordillera, createCordillera, getSettings, updateTestMode } from "../db/queries";
 import type { Cordillera } from "../db/schema";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
@@ -25,7 +25,8 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader() {
   const cordilleras = await getAllCordilleras();
-  return { cordilleras };
+  const settings = await getSettings();
+  return { cordilleras, settings };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -70,13 +71,16 @@ export async function action({ request }: Route.ActionArgs) {
     };
     
     await createCordillera(newCordillera);
+  } else if (intent === "toggleTestMode") {
+    const enabled = formData.get("enabled") === "true";
+    await updateTestMode(enabled);
   }
   
   return { success: true };
 }
 
 export default function Dev({ loaderData }: Route.ComponentProps) {
-  const { cordilleras } = loaderData;
+  const { cordilleras, settings } = loaderData;
   const fetcher = useFetcher();
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const [nombrePunto, setNombrePunto] = useState("");
@@ -440,12 +444,24 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         )}
 
         {/* Controles */}
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow flex flex-col gap-3">
           <button
             onClick={() => setMostrarCordilleras(!mostrarCordilleras)}
             className={`w-full px-4 py-2 ${mostrarCordilleras ? 'bg-green-600' : 'bg-gray-600'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
             {mostrarCordilleras ? 'Ocultar' : 'Mostrar'} Cordilleras Existentes
+          </button>
+
+          <button
+            onClick={() => {
+              const formData = new FormData();
+              formData.append("intent", "toggleTestMode");
+              formData.append("enabled", (!settings.testMode).toString());
+              fetcher.submit(formData, { method: "post" });
+            }}
+            className={`w-full px-4 py-2 ${settings.testMode ? 'bg-yellow-500' : 'bg-gray-600'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+          >
+            {settings.testMode ? '🧪 Modo Test ON' : '🧪 Activar Modo Test'}
           </button>
         </div>
       </div>

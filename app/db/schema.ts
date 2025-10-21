@@ -11,5 +11,12 @@ export const cordilleras = sqliteTable("cordilleras", {
   rotation: real("rotation"),
 });
 
+export const settings = sqliteTable("settings", {
+  id: text("id").primaryKey(),
+  testMode: integer("testMode", { mode: "boolean" }).notNull().default(false),
+});
+
 export type Cordillera = typeof cordilleras.$inferSelect;
 export type NewCordillera = typeof cordilleras.$inferInsert;
+export type Settings = typeof settings.$inferSelect;
+export type NewSettings = typeof settings.$inferInsert;
