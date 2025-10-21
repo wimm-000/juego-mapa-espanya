@@ -2,7 +2,7 @@ import type { Route } from "./+types/juego";
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import type { ElementoGeografico } from "../db/schema";
-import { getAllElementosGeograficos, getSettings } from "../db/queries";
+import { getAllElementosGeograficos, getSettings, getAllCategorias } from "../db/queries";
 import confetti from "canvas-confetti";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
@@ -21,12 +21,13 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader() {
   const elementosGeograficos = await getAllElementosGeograficos();
+  const categorias = await getAllCategorias();
   const settings = await getSettings();
-  return { elementosGeograficos, testMode: settings.testMode };
+  return { elementosGeograficos, categorias, testMode: settings.testMode };
 }
 
 export default function Juego({ loaderData }: Route.ComponentProps) {
-  const { elementosGeograficos, testMode } = loaderData;
+  const { elementosGeograficos, categorias, testMode } = loaderData;
   const [puntuacion, setPuntuacion] = useState(0);
   const [elementosGeograficosColocados, setElementosGeograficosColocados] = useState<
     ElementoGeograficoColocado[]
@@ -51,6 +52,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   const [mostrarFelicitaciones, setMostrarFelicitaciones] = useState(false);
   const [touchActive, setTouchActive] = useState(false);
   const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>("");
 
   // Detectar cuando se completan todos los elementos geograficos
   useEffect(() => {
@@ -89,10 +91,32 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     }
   }, [elementosGeograficosRestantes, elementosGeograficosColocados, elementosGeograficosFallados]);
 
+  // Update game elements when category filter changes
+  useEffect(() => {
+    let filtered = elementosGeograficos;
+    if (categoriaFiltro) {
+      filtered = elementosGeograficos.filter(el => el.categoriaId === categoriaFiltro);
+    }
+    const shuffled = [...filtered];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setElementosGeograficosRestantes(shuffled);
+    setElementosGeograficosColocados([]);
+    setElementosGeograficosFallados([]);
+    setPuntuacion(0);
+    setMostrarFelicitaciones(false);
+  }, [categoriaFiltro, elementosGeograficos]);
+
   const handleReset = () => {
     setPuntuacion(0);
     setElementosGeograficosColocados([]);
-    const shuffled = [...elementosGeograficos];
+    let filtered = elementosGeograficos;
+    if (categoriaFiltro) {
+      filtered = elementosGeograficos.filter(el => el.categoriaId === categoriaFiltro);
+    }
+    const shuffled = [...filtered];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -278,7 +302,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   return (
     <div className="flex min-h-screen p-8 gap-8">
       <div className="flex-1 flex flex-col gap-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Link
             to="/"
             className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors no-underline"
@@ -297,6 +321,21 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
           >
             Reiniciar
           </button>
+          <div className="flex items-center gap-2">
+            <label className="text-gray-700 font-semibold">Filtrar por categoría:</label>
+            <select
+              value={categoriaFiltro}
+              onChange={(e) => setCategoriaFiltro(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800"
+            >
+              <option value="">Todas las categorías</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -364,7 +403,9 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 
           {/* Modo Mostrar Áreas: Mostrar solo las zonas sin texto */}
           {mostrarAreas &&
-            elementosGeograficos.map((elementoGeografico) => {
+            elementosGeograficos
+              .filter((elementoGeografico) => !categoriaFiltro || elementoGeografico.categoriaId === categoriaFiltro)
+              .map((elementoGeografico) => {
               const tieneZonaRectangular =
                 elementoGeografico.width !== null &&
                 elementoGeografico.width !== undefined &&
@@ -403,7 +444,9 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             })}
 
           {testMode &&
-            elementosGeograficos.map((elementoGeografico) => {
+            elementosGeograficos
+              .filter((elementoGeografico) => !categoriaFiltro || elementoGeografico.categoriaId === categoriaFiltro)
+              .map((elementoGeografico) => {
               const tieneZonaRectangular =
                 elementoGeografico.width !== null &&
                 elementoGeografico.width !== undefined &&
