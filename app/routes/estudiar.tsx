@@ -1,6 +1,6 @@
 import type { Route } from "./+types/estudiar";
 import { Link } from "react-router";
-import { getAllElementosGeograficos } from "../db/queries";
+import { getAllElementosGeograficosWithCategorias } from "../db/queries";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
 export function meta({}: Route.MetaArgs) {
@@ -11,7 +11,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader() {
-  const elementosGeograficos = await getAllElementosGeograficos();
+  const elementosGeograficos = await getAllElementosGeograficosWithCategorias();
   return { elementosGeograficos };
 }
 

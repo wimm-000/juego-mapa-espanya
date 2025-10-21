@@ -8,8 +8,12 @@ import {
   createElementoGeografico,
   getSettings,
   updateTestMode,
+  getAllCategorias,
+  createCategoria,
+  updateCategoria,
+  deleteCategoria,
 } from "../db/queries";
-import type { ElementoGeografico } from "../db/schema";
+import type { ElementoGeografico, Categoria } from "../db/schema";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
 interface Punto {
@@ -35,8 +39,9 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader() {
   const cordilleras = await getAllElementosGeograficos();
+  const categorias = await getAllCategorias();
   const settings = await getSettings();
-  return { cordilleras, settings };
+  return { cordilleras, categorias, settings };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -70,9 +75,11 @@ export async function action({ request }: Route.ActionArgs) {
 
     await updateElementoGeografico(id, data);
   } else if (intent === "create") {
+    const categoriaId = formData.get("categoriaId") as string;
     const newElementoGeografico = {
       id: `${Date.now()}`,
       nombre: formData.get("nombre") as string,
+      categoriaId: categoriaId || null,
       x: Number(formData.get("x")),
       y: Number(formData.get("y")),
       tolerancia: Number(formData.get("tolerancia")),
@@ -94,13 +101,23 @@ export async function action({ request }: Route.ActionArgs) {
   } else if (intent === "toggleTestMode") {
     const enabled = formData.get("enabled") === "true";
     await updateTestMode(enabled);
+  } else if (intent === "createCategoria") {
+    const nombre = formData.get("nombre") as string;
+    await createCategoria({ id: `${Date.now()}`, nombre });
+  } else if (intent === "updateCategoria") {
+    const id = formData.get("id") as string;
+    const nombre = formData.get("nombre") as string;
+    await updateCategoria(id, { nombre });
+  } else if (intent === "deleteCategoria") {
+    const id = formData.get("id") as string;
+    await deleteCategoria(id);
   }
 
   return { success: true };
 }
 
 export default function Dev({ loaderData }: Route.ComponentProps) {
-  const { cordilleras, settings } = loaderData;
+  const { cordilleras, categorias, settings } = loaderData;
   const fetcher = useFetcher();
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const [nombrePunto, setNombrePunto] = useState("");
@@ -115,6 +132,10 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     id: string;
     nombre: string;
   } | null>(null);
+  const [nuevaCategoria, setNuevaCategoria] = useState("");
+  const [categoriaEditando, setCategoriaEditando] = useState<string | null>(null);
+  const [categoriaEditandoNombre, setCategoriaEditandoNombre] = useState("");
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
 
   // Combinar cordilleras de BD con puntos de localStorage en el estado inicial
   useEffect(() => {
@@ -159,12 +180,16 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
       // Añadir al principio de la lista (orden invertido)
       setPuntos([nuevoPunto, ...puntos]);
       setNombrePunto("");
+      setCategoriaSeleccionada("");
 
       // Guardar en la base de datos
       const formData = new FormData();
       formData.append("intent", "create");
       formData.append("id", id);
       formData.append("nombre", nuevoPunto.nombre);
+      if (categoriaSeleccionada) {
+        formData.append("categoriaId", categoriaSeleccionada);
+      }
       formData.append("x", x.toString());
       formData.append("y", y.toString());
       formData.append("tolerancia", tolerancia.toString());
@@ -310,20 +335,36 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
         {/* Input para nombre */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <label className="block mb-2 font-semibold text-gray-800">
-            Nombre de la cordillera:
-          </label>
-          <input
-            type="text"
-            value={nombrePunto}
-            onChange={(e) => setNombrePunto(e.target.value)}
-            placeholder="Ej: Pirineos"
-            className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
-          />
+           <label className="block mb-2 font-semibold text-gray-800">
+             Nombre de la cordillera:
+           </label>
+           <input
+             type="text"
+             value={nombrePunto}
+             onChange={(e) => setNombrePunto(e.target.value)}
+             placeholder="Ej: Pirineos"
+             className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
+           />
 
-          <label className="block mt-4 mb-2 font-semibold text-gray-800">
-            Tolerancia (píxeles):
-          </label>
+           <label className="block mt-4 mb-2 font-semibold text-gray-800">
+             Categoría:
+           </label>
+           <select
+             value={categoriaSeleccionada}
+             onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+             className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
+           >
+             <option value="">Sin categoría</option>
+             {categorias.map((categoria) => (
+               <option key={categoria.id} value={categoria.id}>
+                 {categoria.nombre}
+               </option>
+             ))}
+           </select>
+
+           <label className="block mt-4 mb-2 font-semibold text-gray-800">
+             Tolerancia (píxeles):
+           </label>
           <input
             type="number"
             value={tolerancia}
@@ -342,6 +383,119 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               Crear como zona rectangular
             </span>
           </label>
+        </div>
+
+        {/* Gestión de Categorías */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Gestión de Categorías
+          </h3>
+
+          {/* Crear nueva categoría */}
+          <div className="mb-4">
+            <label className="block mb-2 font-semibold text-gray-800">
+              Nueva Categoría:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={nuevaCategoria}
+                onChange={(e) => setNuevaCategoria(e.target.value)}
+                placeholder="Ej: Cordilleras"
+                className="flex-1 p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
+              />
+              <button
+                onClick={() => {
+                  if (nuevaCategoria.trim()) {
+                    const formData = new FormData();
+                    formData.append("intent", "createCategoria");
+                    formData.append("nombre", nuevaCategoria.trim());
+                    fetcher.submit(formData, { method: "post" });
+                    setNuevaCategoria("");
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 text-white border-none rounded font-semibold cursor-pointer hover:bg-green-700 transition-colors"
+              >
+                ➕ Crear
+              </button>
+            </div>
+          </div>
+
+          {/* Lista de categorías */}
+          {categorias.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-semibold text-gray-800">Categorías Existentes:</h4>
+              {categorias.map((categoria) => (
+                <div
+                  key={categoria.id}
+                  className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                >
+                  {categoriaEditando === categoria.id ? (
+                    <>
+                      <input
+                        type="text"
+                        value={categoriaEditandoNombre}
+                        onChange={(e) => setCategoriaEditandoNombre(e.target.value)}
+                        className="flex-1 p-1 border border-gray-300 rounded text-sm bg-white text-gray-800"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          if (categoriaEditandoNombre.trim()) {
+                            const formData = new FormData();
+                            formData.append("intent", "updateCategoria");
+                            formData.append("id", categoria.id);
+                            formData.append("nombre", categoriaEditandoNombre.trim());
+                            fetcher.submit(formData, { method: "post" });
+                          }
+                          setCategoriaEditando(null);
+                          setCategoriaEditandoNombre("");
+                        }}
+                        className="px-2 py-1 bg-green-600 text-white border-none rounded text-xs cursor-pointer hover:bg-green-700"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCategoriaEditando(null);
+                          setCategoriaEditandoNombre("");
+                        }}
+                        className="px-2 py-1 bg-gray-600 text-white border-none rounded text-xs cursor-pointer hover:bg-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 text-gray-800">{categoria.nombre}</span>
+                      <button
+                        onClick={() => {
+                          setCategoriaEditando(categoria.id);
+                          setCategoriaEditandoNombre(categoria.nombre);
+                        }}
+                        className="px-2 py-1 bg-blue-600 text-white border-none rounded text-xs cursor-pointer hover:bg-blue-700"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`¿Eliminar la categoría "${categoria.nombre}"?`)) {
+                            const formData = new FormData();
+                            formData.append("intent", "deleteCategoria");
+                            formData.append("id", categoria.id);
+                            fetcher.submit(formData, { method: "post" });
+                          }
+                        }}
+                        className="px-2 py-1 bg-red-600 text-white border-none rounded text-xs cursor-pointer hover:bg-red-700"
+                      >
+                        🗑️
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Lista de puntos capturados */}
