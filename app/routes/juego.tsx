@@ -31,8 +31,16 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   const [cordillerasColocadas, setCordillerasColocadas] = useState<
     CordilleraColocada[]
   >([]);
-  const [cordillerasRestantes, setCordillerasRestantes] =
-    useState<Cordillera[]>(cordilleras);
+  const [cordillerasRestantes, setCordillerasRestantes] = useState<Cordillera[]>(
+    () => {
+      const shuffled = [...cordilleras];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+  );
   const [cordillerasFalladas, setCordillerasFalladas] = useState<Cordillera[]>(
     [],
   );
@@ -41,6 +49,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   );
   const [mostrarAreas, setMostrarAreas] = useState(false);
   const [mostrarFelicitaciones, setMostrarFelicitaciones] = useState(false);
+  const [touchActive, setTouchActive] = useState(false);
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Detectar cuando se completan todas las cordilleras
   useEffect(() => {
@@ -82,7 +92,12 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   const handleReset = () => {
     setPuntuacion(0);
     setCordillerasColocadas([]);
-    setCordillerasRestantes(cordilleras);
+    const shuffled = [...cordilleras];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setCordillerasRestantes(shuffled);
     setCordillerasFalladas([]);
     setDraggedCordillera(null);
     setMostrarFelicitaciones(false);
@@ -93,22 +108,27 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     cordillera: Cordillera,
   ) => {
     setDraggedCordillera(cordillera);
+    setDragPosition({ x: e.clientX, y: e.clientY });
 
     const canvas = document.createElement("canvas");
-    canvas.width = 40;
-    canvas.height = 40;
+    canvas.width = 1;
+    canvas.height = 1;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.fillStyle = "#007bff";
-      ctx.beginPath();
-      ctx.arc(20, 20, 18, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.clearRect(0, 0, 1, 1);
     }
 
-    e.dataTransfer.setDragImage(canvas, 20, 20);
+    e.dataTransfer.setDragImage(canvas, 0, 0);
+  };
+
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    if (e.clientX !== 0 && e.clientY !== 0) {
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDragPosition(null);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -174,10 +194,85 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     }
 
     setDraggedCordillera(null);
+    setDragPosition(null);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>, cordillera: Cordillera) => {
+    setDraggedCordillera(cordillera);
+    setTouchActive(true);
+    const touch = e.touches[0];
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchActive) {
+      const touch = e.touches[0];
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!draggedCordillera || !touchActive) return;
+
+    const touch = e.changedTouches[0];
+    const mapElement = document.getElementById("game-map");
+    if (!mapElement) return;
+
+    const rect = mapElement.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width) * MAP_WIDTH;
+    const y = ((touch.clientY - rect.top) / rect.height) * MAP_HEIGHT;
+
+    let esCorrecto = false;
+
+    if (
+      draggedCordillera.width !== null &&
+      draggedCordillera.width !== undefined &&
+      draggedCordillera.height !== null &&
+      draggedCordillera.height !== undefined
+    ) {
+      const dx = x - draggedCordillera.x;
+      const dy = y - draggedCordillera.y;
+      const rotation = (-(draggedCordillera.rotation || 0) * Math.PI) / 180;
+      const rotatedX = dx * Math.cos(rotation) - dy * Math.sin(rotation);
+      const rotatedY = dx * Math.sin(rotation) + dy * Math.cos(rotation);
+      esCorrecto =
+        Math.abs(rotatedX) <= draggedCordillera.width / 2 &&
+        Math.abs(rotatedY) <= draggedCordillera.height / 2;
+    } else {
+      const distancia = Math.sqrt(
+        Math.pow(x - draggedCordillera.x, 2) +
+          Math.pow(y - draggedCordillera.y, 2),
+      );
+      esCorrecto = distancia <= draggedCordillera.tolerancia;
+    }
+
+    if (esCorrecto) {
+      setPuntuacion(puntuacion + 100);
+      setCordillerasColocadas([
+        ...cordillerasColocadas,
+        {
+          cordilleraId: draggedCordillera.id,
+          x: draggedCordillera.x,
+          y: draggedCordillera.y,
+        },
+      ]);
+      setCordillerasRestantes(
+        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
+      );
+    } else {
+      setCordillerasFalladas([...cordillerasFalladas, draggedCordillera]);
+      setCordillerasRestantes(
+        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
+      );
+    }
+
+    setDraggedCordillera(null);
+    setTouchActive(false);
+    setDragPosition(null);
   };
 
   return (
@@ -212,7 +307,12 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                 key={cordillera.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, cordillera)}
-                className="p-4 bg-gray-500 text-white rounded-lg cursor-grab font-semibold hover:bg-gray-600 transition-colors active:cursor-grabbing"
+                onDrag={handleDrag}
+                onDragEnd={handleDragEnd}
+                onTouchStart={(e) => handleTouchStart(e, cordillera)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className="p-4 bg-gray-500 text-white rounded-lg cursor-grab font-semibold hover:bg-gray-600 transition-colors active:cursor-grabbing touch-none"
               >
                 {cordillera.nombre}
               </div>
@@ -250,6 +350,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div
+          id="game-map"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           className="relative w-full border-2 border-gray-800 bg-blue-50 rounded-lg overflow-hidden shadow-lg"
@@ -443,6 +544,22 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
           })}
         </div>
       </div>
+
+      {/* Elemento visual flotante durante drag */}
+      {draggedCordillera && dragPosition && (
+        <div
+          className="fixed pointer-events-none z-[9999]"
+          style={{
+            left: dragPosition.x,
+            top: dragPosition.y,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="bg-blue-600 text-white px-4 py-3 rounded-lg shadow-2xl font-semibold border-2 border-white">
+            {draggedCordillera.nombre}
+          </div>
+        </div>
+      )}
 
       {/* Modal de felicitaciones */}
       {mostrarFelicitaciones && (

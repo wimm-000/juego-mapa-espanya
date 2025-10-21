@@ -141,7 +141,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
     const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
-    const y = Math.round(((e.clientX - rect.top) / rect.height) * MAP_HEIGHT);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * MAP_HEIGHT);
 
     if (nombrePunto.trim()) {
       const id = `${Date.now()}`;
