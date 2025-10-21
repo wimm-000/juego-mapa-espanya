@@ -126,7 +126,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const [nombrePunto, setNombrePunto] = useState("");
-  const [mostrarElementoGeograficos, setMostrarElementoGeograficos] = useState(true);
+  const [mostrarElementoGeograficos, setMostrarElementoGeograficos] =
+    useState(true);
   const [tolerancia, setTolerancia] = useState(30);
   const [puntoSeleccionado, setPuntoSeleccionado] = useState<string | null>(
     null,
@@ -138,10 +139,15 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     nombre: string;
   } | null>(null);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
-  const [categoriaEditando, setCategoriaEditando] = useState<string | null>(null);
+  const [categoriaEditando, setCategoriaEditando] = useState<string | null>(
+    null,
+  );
   const [categoriaEditandoNombre, setCategoriaEditandoNombre] = useState("");
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
-  const [categoriasFiltradas, setCategoriasFiltradas] = useState<Set<string>>(new Set());
+  const [categoriaSeleccionada, setCategoriaSeleccionada] =
+    useState<string>("");
+  const [categoriasFiltradas, setCategoriasFiltradas] = useState<Set<string>>(
+    new Set(),
+  );
   const puntosRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const puntosContainerRef = useRef<HTMLDivElement>(null);
 
@@ -329,9 +335,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
       if (element) {
         // Scroll the element into view
         element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'nearest'
+          behavior: "smooth",
+          block: "nearest",
+          inline: "nearest",
         });
       }
     }
@@ -361,36 +367,36 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
         {/* Input para nombre */}
         <div className="bg-white p-6 rounded-lg shadow">
-           <label className="block mb-2 font-semibold text-gray-800">
-             Nombre de la cordillera:
-           </label>
-           <input
-             type="text"
-             value={nombrePunto}
-             onChange={(e) => setNombrePunto(e.target.value)}
-             placeholder="Ej: Pirineos"
-             className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
-           />
+          <label className="block mb-2 font-semibold text-gray-800">
+            Nombre de la cordillera:
+          </label>
+          <input
+            type="text"
+            value={nombrePunto}
+            onChange={(e) => setNombrePunto(e.target.value)}
+            placeholder="Ej: Pirineos"
+            className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
+          />
 
-           <label className="block mt-4 mb-2 font-semibold text-gray-800">
-             Categoría:
-           </label>
-           <select
-             value={categoriaSeleccionada}
-             onChange={(e) => setCategoriaSeleccionada(e.target.value)}
-             className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
-           >
-             <option value="">Sin categoría</option>
-             {categorias.map((categoria) => (
-               <option key={categoria.id} value={categoria.id}>
-                 {categoria.nombre}
-               </option>
-             ))}
-           </select>
+          <label className="block mt-4 mb-2 font-semibold text-gray-800">
+            Categoría:
+          </label>
+          <select
+            value={categoriaSeleccionada}
+            onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
+          >
+            <option value="">Sin categoría</option>
+            {categorias.map((categoria) => (
+              <option key={categoria.id} value={categoria.id}>
+                {categoria.nombre}
+              </option>
+            ))}
+          </select>
 
-           <label className="block mt-4 mb-2 font-semibold text-gray-800">
-             Tolerancia (píxeles):
-           </label>
+          <label className="block mt-4 mb-2 font-semibold text-gray-800">
+            Tolerancia (píxeles):
+          </label>
           <input
             type="number"
             value={tolerancia}
@@ -422,198 +428,203 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                 .filter((punto) => {
                   // Si no hay filtros seleccionados, mostrar todos
                   if (categoriasFiltradas.size === 0) return true;
-                  // Si el punto no tiene categoría, no mostrar si hay filtros activos
-                  if (!punto.categoriaId) return false;
+                  // Mostrar puntos sin categoría (recién creados) siempre
+                  if (!punto.categoriaId) return true;
                   // Mostrar solo si la categoría del punto está en los filtros seleccionados
                   return categoriasFiltradas.has(punto.categoriaId);
                 })
                 .map((punto) => (
-                <div
-                  key={punto.id}
-                  ref={(el) => { puntosRefs.current[punto.id] = el; }}
-                  className={`p-3 rounded ${puntoSeleccionado === punto.id ? "bg-blue-50 border-2 border-blue-600" : "bg-gray-50"} text-sm cursor-pointer`}
-                  onClick={() =>
-                    setPuntoSeleccionado(
-                      puntoSeleccionado === punto.id ? null : punto.id,
-                    )
-                  }
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-800 text-sm">
-                        {punto.nombre}
-                      </div>
-                      <div className="text-gray-600 text-xs mt-1">
-                        x: {punto.x}, y: {punto.y}, tol: {punto.tolerancia}
-                      </div>
-                      {punto.categoriaId && (
-                        <div className="text-green-600 text-xs mt-1">
-                          📂 {categorias.find(c => c.id === punto.categoriaId)?.nombre || 'Categoría desconocida'}
+                  <div
+                    key={punto.id}
+                    ref={(el) => {
+                      puntosRefs.current[punto.id] = el;
+                    }}
+                    className={`p-3 rounded ${puntoSeleccionado === punto.id ? "bg-blue-50 border-2 border-blue-600" : "bg-gray-50"} text-sm cursor-pointer`}
+                    onClick={() =>
+                      setPuntoSeleccionado(
+                        puntoSeleccionado === punto.id ? null : punto.id,
+                      )
+                    }
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-800 text-sm">
+                          {punto.nombre}
                         </div>
-                      )}
-                      {punto.width !== undefined && (
-                        <div className="text-blue-600 text-xs mt-1">
-                          📦 {punto.width}x{punto.height} rot: {punto.rotation}°
+                        <div className="text-gray-600 text-xs mt-1">
+                          x: {punto.x}, y: {punto.y}, tol: {punto.tolerancia}
                         </div>
-                      )}
+                        {punto.categoriaId && (
+                          <div className="text-green-600 text-xs mt-1">
+                            📂{" "}
+                            {categorias.find((c) => c.id === punto.categoriaId)
+                              ?.nombre || "Categoría desconocida"}
+                          </div>
+                        )}
+                        {punto.width !== undefined && (
+                          <div className="text-blue-600 text-xs mt-1">
+                            📦 {punto.width}x{punto.height} rot:{" "}
+                            {punto.rotation}°
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          eliminarPunto(punto.id, punto.nombre);
+                        }}
+                        className="px-2 py-1 bg-red-600 text-white border-none rounded cursor-pointer text-xs hover:bg-red-700 transition-colors"
+                      >
+                        ✕
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        eliminarPunto(punto.id, punto.nombre);
-                      }}
-                      className="px-2 py-1 bg-red-600 text-white border-none rounded cursor-pointer text-xs hover:bg-red-700 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
 
-                  {puntoSeleccionado === punto.id && (
-                    <div className="mt-3 pt-3 border-t border-gray-300 bg-gray-50 p-3 rounded">
-                      <div className="mb-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (punto.width === undefined) {
-                              actualizarPunto(punto.id, {
-                                width: 100,
-                                height: 60,
-                                rotation: 0,
-                              });
-                            } else {
-                              actualizarPunto(punto.id, {
-                                width: undefined,
-                                height: undefined,
-                                rotation: undefined,
-                              });
-                            }
-                          }}
-                          className="w-full px-2 py-2 bg-gray-600 text-white border-none rounded text-xs cursor-pointer font-semibold hover:bg-gray-700 transition-colors"
-                        >
-                          {punto.width === undefined
-                            ? "📦 Convertir a Zona"
-                            : "🎯 Convertir a Punto"}
-                        </button>
-                      </div>
+                    {puntoSeleccionado === punto.id && (
+                      <div className="mt-3 pt-3 border-t border-gray-300 bg-gray-50 p-3 rounded">
+                        <div className="mb-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (punto.width === undefined) {
+                                actualizarPunto(punto.id, {
+                                  width: 100,
+                                  height: 60,
+                                  rotation: 0,
+                                });
+                              } else {
+                                actualizarPunto(punto.id, {
+                                  width: undefined,
+                                  height: undefined,
+                                  rotation: undefined,
+                                });
+                              }
+                            }}
+                            className="w-full px-2 py-2 bg-gray-600 text-white border-none rounded text-xs cursor-pointer font-semibold hover:bg-gray-700 transition-colors"
+                          >
+                            {punto.width === undefined
+                              ? "📦 Convertir a Zona"
+                              : "🎯 Convertir a Punto"}
+                          </button>
+                        </div>
 
-                      {punto.width !== undefined ? (
-                        <>
+                        {punto.width !== undefined ? (
+                          <>
+                            <div className="mb-2">
+                              <label className="text-sm font-semibold block mb-1 text-gray-800">
+                                Ancho: {punto.width}px
+                              </label>
+                              <input
+                                type="range"
+                                min="20"
+                                max="300"
+                                value={punto.width}
+                                onChange={(e) =>
+                                  actualizarPunto(punto.id, {
+                                    width: Number(e.target.value),
+                                  })
+                                }
+                                className="w-full"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            <div className="mb-2">
+                              <label className="text-sm font-semibold block mb-1 text-gray-800">
+                                Alto: {punto.height}px
+                              </label>
+                              <input
+                                type="range"
+                                min="20"
+                                max="300"
+                                value={punto.height}
+                                onChange={(e) =>
+                                  actualizarPunto(punto.id, {
+                                    height: Number(e.target.value),
+                                  })
+                                }
+                                className="w-full"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            <div className="mb-2">
+                              <label className="text-sm font-semibold block mb-1 text-gray-800">
+                                Rotación: {punto.rotation}°
+                              </label>
+                              <input
+                                type="range"
+                                min="-180"
+                                max="180"
+                                value={punto.rotation || 0}
+                                onChange={(e) =>
+                                  actualizarPunto(punto.id, {
+                                    rotation: Number(e.target.value),
+                                  })
+                                }
+                                className="w-full"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </>
+                        ) : (
                           <div className="mb-2">
                             <label className="text-sm font-semibold block mb-1 text-gray-800">
-                              Ancho: {punto.width}px
+                              Tolerancia: {punto.tolerancia}px
                             </label>
                             <input
                               type="range"
-                              min="20"
-                              max="300"
-                              value={punto.width}
+                              min="10"
+                              max="150"
+                              value={punto.tolerancia}
                               onChange={(e) =>
                                 actualizarPunto(punto.id, {
-                                  width: Number(e.target.value),
+                                  tolerancia: Number(e.target.value),
                                 })
                               }
                               className="w-full"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
-                          <div className="mb-2">
-                            <label className="text-sm font-semibold block mb-1 text-gray-800">
-                              Alto: {punto.height}px
-                            </label>
-                            <input
-                              type="range"
-                              min="20"
-                              max="300"
-                              value={punto.height}
-                              onChange={(e) =>
-                                actualizarPunto(punto.id, {
-                                  height: Number(e.target.value),
-                                })
-                              }
-                              className="w-full"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className="mb-2">
-                            <label className="text-sm font-semibold block mb-1 text-gray-800">
-                              Rotación: {punto.rotation}°
-                            </label>
-                            <input
-                              type="range"
-                              min="-180"
-                              max="180"
-                              value={punto.rotation || 0}
-                              onChange={(e) =>
-                                actualizarPunto(punto.id, {
-                                  rotation: Number(e.target.value),
-                                })
-                              }
-                              className="w-full"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                        </>
-                      ) : (
+                        )}
+
+                        {/* Selector de categoría */}
                         <div className="mb-2">
                           <label className="text-sm font-semibold block mb-1 text-gray-800">
-                            Tolerancia: {punto.tolerancia}px
+                            Categoría:
                           </label>
-                          <input
-                            type="range"
-                            min="10"
-                            max="150"
-                            value={punto.tolerancia}
-                            onChange={(e) =>
+                          <select
+                            value={punto.categoriaId || ""}
+                            onChange={(e) => {
                               actualizarPunto(punto.id, {
-                                tolerancia: Number(e.target.value),
-                              })
-                            }
-                            className="w-full"
+                                categoriaId: e.target.value || undefined,
+                              });
+                            }}
+                            className="w-full p-1 border border-gray-300 rounded text-sm bg-white text-gray-800"
                             onClick={(e) => e.stopPropagation()}
-                          />
+                          >
+                            <option value="">Sin categoría</option>
+                            {categorias.map((categoria) => (
+                              <option key={categoria.id} value={categoria.id}>
+                                {categoria.nombre}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                       )}
 
-                       {/* Selector de categoría */}
-                       <div className="mb-2">
-                         <label className="text-sm font-semibold block mb-1 text-gray-800">
-                           Categoría:
-                         </label>
-                         <select
-                           value={punto.categoriaId || ""}
-                           onChange={(e) => {
-                             actualizarPunto(punto.id, {
-                               categoriaId: e.target.value || undefined,
-                             });
-                           }}
-                           className="w-full p-1 border border-gray-300 rounded text-sm bg-white text-gray-800"
-                           onClick={(e) => e.stopPropagation()}
-                         >
-                           <option value="">Sin categoría</option>
-                           {categorias.map((categoria) => (
-                             <option key={categoria.id} value={categoria.id}>
-                               {categoria.nombre}
-                             </option>
-                           ))}
-                         </select>
-                       </div>
-
-                       {/* Botón para finalizar edición */}
-                      <div className="mt-3 pt-3 border-t border-gray-300">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPuntoSeleccionado(null);
-                          }}
-                          className="w-full px-3 py-2 bg-green-600 text-white border-none rounded font-semibold cursor-pointer hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                        >
-                          ✓ Finalizar Edición
-                        </button>
+                        {/* Botón para finalizar edición */}
+                        <div className="mt-3 pt-3 border-t border-gray-300">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPuntoSeleccionado(null);
+                            }}
+                            className="w-full px-3 py-2 bg-green-600 text-white border-none rounded font-semibold cursor-pointer hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                          >
+                            ✓ Finalizar Edición
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
         )}
@@ -621,10 +632,13 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         {/* Controles */}
         <div className="bg-white p-6 rounded-lg shadow flex flex-col gap-3">
           <button
-            onClick={() => setMostrarElementoGeograficos(!mostrarElementoGeograficos)}
+            onClick={() =>
+              setMostrarElementoGeograficos(!mostrarElementoGeograficos)
+            }
             className={`w-full px-4 py-2 ${mostrarElementoGeograficos ? "bg-green-600" : "bg-gray-600"} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
-            {mostrarElementoGeograficos ? "Ocultar" : "Mostrar"} ElementoGeograficos Existentes
+            {mostrarElementoGeograficos ? "Ocultar" : "Mostrar"}{" "}
+            ElementoGeograficos Existentes
           </button>
 
           <button
@@ -679,7 +693,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           {/* Filtro por categorías */}
           {categorias.length > 0 && (
             <div className="mb-4">
-              <h4 className="font-semibold text-gray-800 mb-2">Filtrar elementos por categoría:</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">
+                Filtrar elementos por categoría:
+              </h4>
               <div className="space-y-1">
                 <label className="flex items-center text-sm">
                   <input
@@ -691,7 +707,10 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                   <span className="text-gray-700">Mostrar todas</span>
                 </label>
                 {categorias.map((categoria) => (
-                  <label key={categoria.id} className="flex items-center text-sm">
+                  <label
+                    key={categoria.id}
+                    className="flex items-center text-sm"
+                  >
                     <input
                       type="checkbox"
                       checked={categoriasFiltradas.has(categoria.id)}
@@ -716,7 +735,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           {/* Lista de categorías */}
           {categorias.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-semibold text-gray-800">Categorías Existentes:</h4>
+              <h4 className="font-semibold text-gray-800">
+                Categorías Existentes:
+              </h4>
               {categorias.map((categoria) => (
                 <div
                   key={categoria.id}
@@ -727,7 +748,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                       <input
                         type="text"
                         value={categoriaEditandoNombre}
-                        onChange={(e) => setCategoriaEditandoNombre(e.target.value)}
+                        onChange={(e) =>
+                          setCategoriaEditandoNombre(e.target.value)
+                        }
                         className="flex-1 p-1 border border-gray-300 rounded text-sm bg-white text-gray-800"
                         autoFocus
                       />
@@ -737,7 +760,10 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                             const formData = new FormData();
                             formData.append("intent", "updateCategoria");
                             formData.append("id", categoria.id);
-                            formData.append("nombre", categoriaEditandoNombre.trim());
+                            formData.append(
+                              "nombre",
+                              categoriaEditandoNombre.trim(),
+                            );
                             fetcher.submit(formData, { method: "post" });
                           }
                           setCategoriaEditando(null);
@@ -759,7 +785,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                     </>
                   ) : (
                     <>
-                      <span className="flex-1 text-gray-800">{categoria.nombre}</span>
+                      <span className="flex-1 text-gray-800">
+                        {categoria.nombre}
+                      </span>
                       <button
                         onClick={() => {
                           setCategoriaEditando(categoria.id);
@@ -771,7 +799,11 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                       </button>
                       <button
                         onClick={() => {
-                          if (confirm(`¿Eliminar la categoría "${categoria.nombre}"?`)) {
+                          if (
+                            confirm(
+                              `¿Eliminar la categoría "${categoria.nombre}"?`,
+                            )
+                          ) {
                             const formData = new FormData();
                             formData.append("intent", "deleteCategoria");
                             formData.append("id", categoria.id);
@@ -792,15 +824,14 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
       </div>
 
       {/* Columna derecha: Mapa */}
-      <div className="flex-[2]">
+      <div className="flex-[2] sticky top-0">
         {/* Mapa */}
         <div
           onClick={handleMapClick}
           onDragOver={handleMapDragOver}
           onDrop={handleMapDrop}
-          className="relative w-full border-2 border-gray-800 bg-cyan-50 rounded-lg overflow-hidden shadow-lg"
+          className="relative border-2 border-gray-800 bg-cyan-50 rounded-lg overflow-hidden shadow-lg"
           style={{
-            aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`,
             cursor: puntoArrastrando ? "grabbing" : "crosshair",
           }}
         >
@@ -822,123 +853,124 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                 return categoriasFiltradas.has(cordillera.categoriaId);
               })
               .map((cordillera) => (
-              <div key={`existing-${cordillera.id}`}>
-                <div
-                  className="absolute w-3 h-3 bg-red-600/60 rounded-full border-2 border-red-600 z-[5]"
-                  style={{
-                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                    top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                />
-                <div
-                  className="absolute text-[10px] text-red-600 font-bold bg-white/95 px-1.5 py-0.5 rounded z-[6] whitespace-nowrap border border-red-600"
-                  style={{
-                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                    top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
-                    transform: "translateX(-50%)",
-                  }}
-                >
-                  {cordillera.nombre}
+                <div key={`existing-${cordillera.id}`}>
+                  <div
+                    className="absolute w-3 h-3 bg-red-600/60 rounded-full border-2 border-red-600 z-[5]"
+                    style={{
+                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                  <div
+                    className="absolute text-[10px] text-red-600 font-bold bg-white/95 px-1.5 py-0.5 rounded z-[6] whitespace-nowrap border border-red-600"
+                    style={{
+                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                      top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    {cordillera.nombre}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
           {/* Puntos nuevos capturados */}
           {puntos
             .filter((punto) => {
               // Si no hay filtros seleccionados, mostrar todos
               if (categoriasFiltradas.size === 0) return true;
-              // Si el punto no tiene categoría, no mostrar si hay filtros activos
-              if (!punto.categoriaId) return false;
+              // Mostrar puntos sin categoría (recién creados) siempre
+              if (!punto.categoriaId) return true;
               // Mostrar solo si la categoría del punto está en los filtros seleccionados
               return categoriasFiltradas.has(punto.categoriaId);
             })
             .map((punto) => (
-            <div key={`new-${punto.id}`}>
-              {punto.width !== undefined && punto.height !== undefined ? (
-                <div
-                  draggable
-                  onDragStart={(e) => handlePuntoDragStart(e, punto.id)}
-                  onDragEnd={handlePuntoDragEnd}
-                  className={`absolute border-2 shadow-md pointer-events-auto ${
-                    puntoArrastrando === punto.id
-                      ? "bg-blue-600/50 border-blue-600/70 z-[20] opacity-50 cursor-grabbing"
-                      : puntoSeleccionado === punto.id
-                        ? "bg-blue-600/30 border-blue-600 z-[15] cursor-grab"
-                        : "bg-blue-600/15 border-blue-600/70 z-10 cursor-grab"
-                  }`}
-                  style={{
-                    left: `${(punto.x / MAP_WIDTH) * 100}%`,
-                    top: `${(punto.y / MAP_HEIGHT) * 100}%`,
-                    width: `${(punto.width / MAP_WIDTH) * 100}%`,
-                    height: `${(punto.height / MAP_HEIGHT) * 100}%`,
-                    transform: `translate(-50%, -50%) rotate(${punto.rotation || 0}deg)`,
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPuntoSeleccionado(
-                      puntoSeleccionado === punto.id ? null : punto.id,
-                    );
-                  }}
-                />
-              ) : (
-                <div
-                  draggable
-                  onDragStart={(e) => handlePuntoDragStart(e, punto.id)}
-                  onDragEnd={handlePuntoDragEnd}
-                  className={`absolute w-4 h-4 rounded-full border-2 border-blue-600 shadow-md pointer-events-auto ${
-                    puntoArrastrando === punto.id
-                      ? "bg-blue-600/50 z-[20] opacity-50 cursor-grabbing"
-                      : puntoSeleccionado === punto.id
-                        ? "bg-blue-600 border-blue-600 z-[15] cursor-grab"
-                        : "bg-blue-600/70 z-10 cursor-grab"
-                  }`}
-                  style={{
-                    left: `${(punto.x / MAP_WIDTH) * 100}%`,
-                    top: `${(punto.y / MAP_HEIGHT) * 100}%`,
-                    transform: "translate(-50%, -50%)",
-                    borderWidth: puntoSeleccionado === punto.id ? "3px" : "2px",
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPuntoSeleccionado(
-                      puntoSeleccionado === punto.id ? null : punto.id,
-                    );
-                  }}
-                />
-              )}
+              <div key={`new-${punto.id}`}>
+                {punto.width !== undefined && punto.height !== undefined ? (
+                  <div
+                    draggable
+                    onDragStart={(e) => handlePuntoDragStart(e, punto.id)}
+                    onDragEnd={handlePuntoDragEnd}
+                    className={`absolute border-2 shadow-md pointer-events-auto ${
+                      puntoArrastrando === punto.id
+                        ? "bg-blue-600/50 border-blue-600/70 z-[20] opacity-50 cursor-grabbing"
+                        : puntoSeleccionado === punto.id
+                          ? "bg-blue-600/30 border-blue-600 z-[15] cursor-grab"
+                          : "bg-blue-600/15 border-blue-600/70 z-10 cursor-grab"
+                    }`}
+                    style={{
+                      left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                      top: `${(punto.y / MAP_HEIGHT) * 100}%`,
+                      width: `${(punto.width / MAP_WIDTH) * 100}%`,
+                      height: `${(punto.height / MAP_HEIGHT) * 100}%`,
+                      transform: `translate(-50%, -50%) rotate(${punto.rotation || 0}deg)`,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPuntoSeleccionado(
+                        puntoSeleccionado === punto.id ? null : punto.id,
+                      );
+                    }}
+                  />
+                ) : (
+                  <div
+                    draggable
+                    onDragStart={(e) => handlePuntoDragStart(e, punto.id)}
+                    onDragEnd={handlePuntoDragEnd}
+                    className={`absolute w-4 h-4 rounded-full border-2 border-blue-600 shadow-md pointer-events-auto ${
+                      puntoArrastrando === punto.id
+                        ? "bg-blue-600/50 z-[20] opacity-50 cursor-grabbing"
+                        : puntoSeleccionado === punto.id
+                          ? "bg-blue-600 border-blue-600 z-[15] cursor-grab"
+                          : "bg-blue-600/70 z-10 cursor-grab"
+                    }`}
+                    style={{
+                      left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                      top: `${(punto.y / MAP_HEIGHT) * 100}%`,
+                      transform: "translate(-50%, -50%)",
+                      borderWidth:
+                        puntoSeleccionado === punto.id ? "3px" : "2px",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPuntoSeleccionado(
+                        puntoSeleccionado === punto.id ? null : punto.id,
+                      );
+                    }}
+                  />
+                )}
 
-              <div
-                className={`absolute text-[11px] font-bold px-2 py-0.5 rounded whitespace-nowrap border shadow-md pointer-events-none ${
-                  puntoSeleccionado === punto.id
-                    ? "bg-blue-600 text-white border-blue-800 z-[16]"
-                    : "bg-white/95 text-blue-600 border-blue-600 z-[11]"
-                }`}
-                style={{
-                  left: `${(punto.x / MAP_WIDTH) * 100}%`,
-                  top: `${((punto.y - 20) / MAP_HEIGHT) * 100}%`,
-                  transform: "translateX(-50%)",
-                  borderWidth: puntoSeleccionado === punto.id ? "2px" : "1px",
-                }}
-              >
-                {punto.nombre}
+                <div
+                  className={`absolute text-[11px] font-bold px-2 py-0.5 rounded whitespace-nowrap border shadow-md pointer-events-none ${
+                    puntoSeleccionado === punto.id
+                      ? "bg-blue-600 text-white border-blue-800 z-[16]"
+                      : "bg-white/95 text-blue-600 border-blue-600 z-[11]"
+                  }`}
+                  style={{
+                    left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                    top: `${((punto.y - 20) / MAP_HEIGHT) * 100}%`,
+                    transform: "translateX(-50%)",
+                    borderWidth: puntoSeleccionado === punto.id ? "2px" : "1px",
+                  }}
+                >
+                  {punto.nombre}
+                </div>
+
+                {punto.width === undefined && (
+                  <div
+                    className="absolute border border-dashed border-blue-600/40 rounded-full z-[5] pointer-events-none"
+                    style={{
+                      left: `${(punto.x / MAP_WIDTH) * 100}%`,
+                      top: `${(punto.y / MAP_HEIGHT) * 100}%`,
+                      width: `${((punto.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                      height: `${((punto.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                )}
               </div>
-
-              {punto.width === undefined && (
-                <div
-                  className="absolute border border-dashed border-blue-600/40 rounded-full z-[5] pointer-events-none"
-                  style={{
-                    left: `${(punto.x / MAP_WIDTH) * 100}%`,
-                    top: `${(punto.y / MAP_HEIGHT) * 100}%`,
-                    width: `${((punto.tolerancia * 2) / MAP_WIDTH) * 100}%`,
-                    height: `${((punto.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                />
-              )}
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 

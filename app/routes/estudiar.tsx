@@ -1,6 +1,7 @@
 import type { Route } from "./+types/estudiar";
 import { Link } from "react-router";
-import { getAllElementosGeograficosWithCategorias } from "../db/queries";
+import { useState } from "react";
+import { getAllElementosGeograficosWithCategorias, getAllCategorias } from "../db/queries";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
 export function meta({}: Route.MetaArgs) {
@@ -12,11 +13,13 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader() {
   const elementosGeograficos = await getAllElementosGeograficosWithCategorias();
-  return { elementosGeograficos };
+  const categorias = await getAllCategorias();
+  return { elementosGeograficos, categorias };
 }
 
 export default function Estudiar({ loaderData }: Route.ComponentProps) {
-  const { elementosGeograficos } = loaderData;
+  const { elementosGeograficos, categorias } = loaderData;
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>("");
 
   return (
     <div className="flex flex-col items-center min-h-screen gap-4 p-8">
@@ -29,6 +32,22 @@ export default function Estudiar({ loaderData }: Route.ComponentProps) {
 
       <h1 className="text-3xl font-bold">Estudiar Elementos Geográficos de España</h1>
 
+      <div className="flex items-center gap-4 mb-4">
+        <label className="text-gray-700 font-semibold">Filtrar por categoría:</label>
+        <select
+          value={categoriaFiltro}
+          onChange={(e) => setCategoriaFiltro(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800"
+        >
+          <option value="">Todas las categorías</option>
+          {categorias.map((categoria) => (
+            <option key={categoria.id} value={categoria.id}>
+              {categoria.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div
         className="relative w-full max-w-4xl border-2 border-gray-800 bg-blue-50 rounded-lg overflow-hidden shadow-lg"
         style={{ aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}` }}
@@ -39,7 +58,9 @@ export default function Estudiar({ loaderData }: Route.ComponentProps) {
           className="w-full h-full object-contain"
         />
 
-        {elementosGeograficos.map((elementoGeografico) => {
+        {elementosGeograficos
+          .filter((elementoGeografico) => !categoriaFiltro || elementoGeografico.categoriaId === categoriaFiltro)
+          .map((elementoGeografico) => {
           const tieneZonaRectangular = elementoGeografico.width !== null && 
                                       elementoGeografico.width !== undefined && 
                                       elementoGeografico.height !== null && 
