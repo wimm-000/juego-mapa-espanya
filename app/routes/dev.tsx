@@ -21,6 +21,7 @@ interface Punto {
   x: number;
   y: number;
   nombre: string;
+  categoriaId?: string;
   tolerancia: number;
   width?: number;
   height?: number;
@@ -58,6 +59,10 @@ export async function action({ request }: Route.ActionArgs) {
     if (formData.has("x")) data.x = Number(formData.get("x"));
     if (formData.has("y")) data.y = Number(formData.get("y"));
     if (formData.has("nombre")) data.nombre = formData.get("nombre") as string;
+    if (formData.has("categoriaId")) {
+      const categoriaId = formData.get("categoriaId") as string;
+      data.categoriaId = categoriaId || null;
+    }
     if (formData.has("tolerancia"))
       data.tolerancia = Number(formData.get("tolerancia"));
     if (formData.has("width")) {
@@ -143,6 +148,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     const cordillerasAsPuntos: Punto[] = cordilleras.map((c) => ({
       id: c.id,
       nombre: c.nombre,
+      categoriaId: c.categoriaId ?? undefined,
       x: c.x,
       y: c.y,
       tolerancia: c.tolerancia,
@@ -171,6 +177,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         x,
         y,
         nombre: nombrePunto,
+        categoriaId: categoriaSeleccionada || undefined,
         tolerancia: tolerancia,
         width: modoZona ? 100 : undefined,
         height: modoZona ? 60 : undefined,
@@ -300,6 +307,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     const cordillerasAsPuntos = cordilleras.map((c) => ({
       id: c.id,
       nombre: c.nombre,
+      categoriaId: c.categoriaId ?? undefined,
       x: c.x,
       y: c.y,
       tolerancia: c.tolerancia,
@@ -309,7 +317,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     }));
     setPuntos(cordillerasAsPuntos);
     setMostrarElementoGeograficos(false);
-  }, [cordilleras]);
+  }, [cordilleras, categorias]);
 
   return (
     <div className="flex min-h-screen p-8 gap-8 bg-gray-100">
@@ -410,6 +418,11 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                       <div className="text-gray-600 text-xs mt-1">
                         x: {punto.x}, y: {punto.y}, tol: {punto.tolerancia}
                       </div>
+                      {punto.categoriaId && (
+                        <div className="text-green-600 text-xs mt-1">
+                          📂 {categorias.find(c => c.id === punto.categoriaId)?.nombre || 'Categoría desconocida'}
+                        </div>
+                      )}
                       {punto.width !== undefined && (
                         <div className="text-blue-600 text-xs mt-1">
                           📦 {punto.width}x{punto.height} rot: {punto.rotation}°
@@ -531,9 +544,33 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
-                      )}
+                       )}
 
-                      {/* Botón para finalizar edición */}
+                       {/* Selector de categoría */}
+                       <div className="mb-2">
+                         <label className="text-sm font-semibold block mb-1 text-gray-800">
+                           Categoría:
+                         </label>
+                         <select
+                           value={punto.categoriaId || ""}
+                           onChange={(e) => {
+                             actualizarPunto(punto.id, {
+                               categoriaId: e.target.value || undefined,
+                             });
+                           }}
+                           className="w-full p-1 border border-gray-300 rounded text-sm bg-white text-gray-800"
+                           onClick={(e) => e.stopPropagation()}
+                         >
+                           <option value="">Sin categoría</option>
+                           {categorias.map((categoria) => (
+                             <option key={categoria.id} value={categoria.id}>
+                               {categoria.nombre}
+                             </option>
+                           ))}
+                         </select>
+                       </div>
+
+                       {/* Botón para finalizar edición */}
                       <div className="mt-3 pt-3 border-t border-gray-300">
                         <button
                           onClick={(e) => {
