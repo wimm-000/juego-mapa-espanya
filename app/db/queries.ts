@@ -1,28 +1,28 @@
 import { db } from "./index";
-import { cordilleras, settings, type Cordillera, type NewCordillera, type Settings, type NewSettings } from "./schema";
+import { elementosGeograficos, settings, type ElementoGeografico, type NewElementoGeografico, type Settings, type NewSettings } from "./schema";
 import { eq } from "drizzle-orm";
 
-export async function getAllCordilleras(): Promise<Cordillera[]> {
-  return await db.select().from(cordilleras);
+export async function getAllElementosGeograficos(): Promise<ElementoGeografico[]> {
+  return await db.select().from(elementosGeograficos);
 }
 
-export async function getCordilleraById(id: string): Promise<Cordillera | undefined> {
-  const result = await db.select().from(cordilleras).where(eq(cordilleras.id, id));
+export async function getElementoGeograficoById(id: string): Promise<ElementoGeografico | undefined> {
+  const result = await db.select().from(elementosGeograficos).where(eq(elementosGeograficos.id, id));
   return result[0];
 }
 
-export async function createCordillera(data: NewCordillera): Promise<Cordillera> {
-  const result = await db.insert(cordilleras).values(data).returning();
+export async function createElementoGeografico(data: NewElementoGeografico): Promise<ElementoGeografico> {
+  const result = await db.insert(elementosGeograficos).values(data).returning();
   return result[0];
 }
 
-export async function updateCordillera(id: string, data: Partial<NewCordillera>): Promise<Cordillera | undefined> {
-  const result = await db.update(cordilleras).set(data).where(eq(cordilleras.id, id)).returning();
+export async function updateElementoGeografico(id: string, data: Partial<NewElementoGeografico>): Promise<ElementoGeografico | undefined> {
+  const result = await db.update(elementosGeograficos).set(data).where(eq(elementosGeograficos.id, id)).returning();
   return result[0];
 }
 
-export async function deleteCordillera(id: string): Promise<void> {
-  await db.delete(cordilleras).where(eq(cordilleras.id, id));
+export async function deleteElementoGeografico(id: string): Promise<void> {
+  await db.delete(elementosGeograficos).where(eq(elementosGeograficos.id, id));
 }
 
 export async function getSettings(): Promise<Settings> {

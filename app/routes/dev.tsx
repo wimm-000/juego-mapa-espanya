@@ -2,14 +2,14 @@ import type { Route } from "./+types/dev";
 import { useState, useEffect } from "react";
 import { Link, useFetcher } from "react-router";
 import {
-  getAllCordilleras,
-  deleteCordillera,
-  updateCordillera,
-  createCordillera,
+  getAllElementosGeograficos,
+  deleteElementoGeografico,
+  updateElementoGeografico,
+  createElementoGeografico,
   getSettings,
   updateTestMode,
 } from "../db/queries";
-import type { Cordillera } from "../db/schema";
+import type { ElementoGeografico } from "../db/schema";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
 interface Punto {
@@ -34,7 +34,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader() {
-  const cordilleras = await getAllCordilleras();
+  const cordilleras = await getAllElementosGeograficos();
   const settings = await getSettings();
   return { cordilleras, settings };
 }
@@ -45,10 +45,10 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (intent === "delete") {
     const id = formData.get("id") as string;
-    await deleteCordillera(id);
+    await deleteElementoGeografico(id);
   } else if (intent === "update") {
     const id = formData.get("id") as string;
-    const data: Partial<Cordillera> = {};
+    const data: Partial<ElementoGeografico> = {};
 
     if (formData.has("x")) data.x = Number(formData.get("x"));
     if (formData.has("y")) data.y = Number(formData.get("y"));
@@ -68,9 +68,9 @@ export async function action({ request }: Route.ActionArgs) {
       data.rotation = rotation ? Number(rotation) : null;
     }
 
-    await updateCordillera(id, data);
+    await updateElementoGeografico(id, data);
   } else if (intent === "create") {
-    const newCordillera = {
+    const newElementoGeografico = {
       id: `${Date.now()}`,
       nombre: formData.get("nombre") as string,
       x: Number(formData.get("x")),
@@ -90,7 +90,7 @@ export async function action({ request }: Route.ActionArgs) {
           : null,
     };
 
-    await createCordillera(newCordillera);
+    await createElementoGeografico(newElementoGeografico);
   } else if (intent === "toggleTestMode") {
     const enabled = formData.get("enabled") === "true";
     await updateTestMode(enabled);
@@ -104,7 +104,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const [nombrePunto, setNombrePunto] = useState("");
-  const [mostrarCordilleras, setMostrarCordilleras] = useState(true);
+  const [mostrarElementoGeograficos, setMostrarElementoGeograficos] = useState(true);
   const [tolerancia, setTolerancia] = useState(30);
   const [puntoSeleccionado, setPuntoSeleccionado] = useState<string | null>(
     null,
@@ -132,7 +132,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
     // Invertir el orden para mostrar los más recientes primero
     setPuntos(cordillerasAsPuntos.reverse());
-    setMostrarCordilleras(false); // No necesitamos mostrar cordilleras separadas
+    setMostrarElementoGeograficos(false); // No necesitamos mostrar cordilleras separadas
   }, [cordilleras]);
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -283,7 +283,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
       rotation: c.rotation || undefined,
     }));
     setPuntos(cordillerasAsPuntos);
-    setMostrarCordilleras(false);
+    setMostrarElementoGeograficos(false);
   }, [cordilleras]);
 
   return (
@@ -515,10 +515,10 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         {/* Controles */}
         <div className="bg-white p-6 rounded-lg shadow flex flex-col gap-3">
           <button
-            onClick={() => setMostrarCordilleras(!mostrarCordilleras)}
-            className={`w-full px-4 py-2 ${mostrarCordilleras ? "bg-green-600" : "bg-gray-600"} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+            onClick={() => setMostrarElementoGeograficos(!mostrarElementoGeograficos)}
+            className={`w-full px-4 py-2 ${mostrarElementoGeograficos ? "bg-green-600" : "bg-gray-600"} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
-            {mostrarCordilleras ? "Ocultar" : "Mostrar"} Cordilleras Existentes
+            {mostrarElementoGeograficos ? "Ocultar" : "Mostrar"} ElementoGeograficos Existentes
           </button>
 
           <button
@@ -554,8 +554,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
             className="w-full h-full object-contain pointer-events-none"
           />
 
-          {/* Cordilleras existentes */}
-          {mostrarCordilleras &&
+          {/* ElementoGeograficos existentes */}
+          {mostrarElementoGeograficos &&
             cordilleras.map((cordillera) => (
               <div key={`existing-${cordillera.id}`}>
                 <div

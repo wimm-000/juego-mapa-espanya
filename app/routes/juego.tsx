@@ -1,13 +1,13 @@
 import type { Route } from "./+types/juego";
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import type { Cordillera } from "../db/schema";
-import { getAllCordilleras, getSettings } from "../db/queries";
+import type { ElementoGeografico } from "../db/schema";
+import { getAllElementosGeograficos, getSettings } from "../db/queries";
 import confetti from "canvas-confetti";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
-interface CordilleraColocada {
-  cordilleraId: string;
+interface ElementoGeograficoColocado {
+  elementoGeograficoId: string;
   x: number;
   y: number;
 }
@@ -20,20 +20,20 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader() {
-  const cordilleras = await getAllCordilleras();
+  const elementosGeograficos = await getAllElementosGeograficos();
   const settings = await getSettings();
-  return { cordilleras, testMode: settings.testMode };
+  return { elementosGeograficos, testMode: settings.testMode };
 }
 
 export default function Juego({ loaderData }: Route.ComponentProps) {
-  const { cordilleras, testMode } = loaderData;
+  const { elementosGeograficos, testMode } = loaderData;
   const [puntuacion, setPuntuacion] = useState(0);
-  const [cordillerasColocadas, setCordillerasColocadas] = useState<
-    CordilleraColocada[]
+  const [elementosGeograficosColocados, setElementosGeograficosColocados] = useState<
+    ElementoGeograficoColocado[]
   >([]);
-  const [cordillerasRestantes, setCordillerasRestantes] = useState<Cordillera[]>(
+  const [elementosGeograficosRestantes, setElementosGeograficosRestantes] = useState<ElementoGeografico[]>(
     () => {
-      const shuffled = [...cordilleras];
+      const shuffled = [...elementosGeograficos];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -41,10 +41,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
       return shuffled;
     }
   );
-  const [cordillerasFalladas, setCordillerasFalladas] = useState<Cordillera[]>(
+  const [elementosGeograficosFallados, setElementosGeograficosFallados] = useState<ElementoGeografico[]>(
     [],
   );
-  const [draggedCordillera, setDraggedCordillera] = useState<Cordillera | null>(
+  const [draggedElementoGeografico, setDraggedElementoGeografico] = useState<ElementoGeografico | null>(
     null,
   );
   const [mostrarAreas, setMostrarAreas] = useState(false);
@@ -52,13 +52,13 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   const [touchActive, setTouchActive] = useState(false);
   const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
 
-  // Detectar cuando se completan todas las cordilleras
+  // Detectar cuando se completan todos los elementos geograficos
   useEffect(() => {
-    if (cordillerasRestantes.length === 0 && cordillerasColocadas.length > 0) {
+    if (elementosGeograficosRestantes.length === 0 && elementosGeograficosColocados.length > 0) {
       setMostrarFelicitaciones(true);
 
       // Lanzar confeti SOLO si no hay fallos (puntuación perfecta)
-      const puntuacionPerfecta = cordillerasFalladas.length === 0;
+      const puntuacionPerfecta = elementosGeograficosFallados.length === 0;
 
       if (puntuacionPerfecta) {
         const duration = 3000;
@@ -87,27 +87,27 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
         frame();
       }
     }
-  }, [cordillerasRestantes, cordillerasColocadas, cordillerasFalladas]);
+  }, [elementosGeograficosRestantes, elementosGeograficosColocados, elementosGeograficosFallados]);
 
   const handleReset = () => {
     setPuntuacion(0);
-    setCordillerasColocadas([]);
-    const shuffled = [...cordilleras];
+    setElementosGeograficosColocados([]);
+    const shuffled = [...elementosGeograficos];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    setCordillerasRestantes(shuffled);
-    setCordillerasFalladas([]);
-    setDraggedCordillera(null);
+    setElementosGeograficosRestantes(shuffled);
+    setElementosGeograficosFallados([]);
+    setDraggedElementoGeografico(null);
     setMostrarFelicitaciones(false);
   };
 
   const handleDragStart = (
     e: React.DragEvent<HTMLDivElement>,
-    cordillera: Cordillera,
+    elementoGeografico: ElementoGeografico,
   ) => {
-    setDraggedCordillera(cordillera);
+    setDraggedElementoGeografico(elementoGeografico);
     setDragPosition({ x: e.clientX, y: e.clientY });
 
     const canvas = document.createElement("canvas");
@@ -133,7 +133,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!draggedCordillera) return;
+    if (!draggedElementoGeografico) return;
 
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
@@ -144,17 +144,17 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 
     // Si es una zona rectangular
     if (
-      draggedCordillera.width !== null &&
-      draggedCordillera.width !== undefined &&
-      draggedCordillera.height !== null &&
-      draggedCordillera.height !== undefined
+      draggedElementoGeografico.width !== null &&
+      draggedElementoGeografico.width !== undefined &&
+      draggedElementoGeografico.height !== null &&
+      draggedElementoGeografico.height !== undefined
     ) {
       // Calcular el punto relativo al centro de la zona
-      const dx = x - draggedCordillera.x;
-      const dy = y - draggedCordillera.y;
+      const dx = x - draggedElementoGeografico.x;
+      const dy = y - draggedElementoGeografico.y;
 
       // Convertir la rotación de grados a radianes (negativo porque CSS rotación es en sentido horario)
-      const rotation = (-(draggedCordillera.rotation || 0) * Math.PI) / 180;
+      const rotation = (-(draggedElementoGeografico.rotation || 0) * Math.PI) / 180;
 
       // Rotar el punto al sistema de coordenadas del rectángulo no rotado
       const rotatedX = dx * Math.cos(rotation) - dy * Math.sin(rotation);
@@ -162,38 +162,38 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 
       // Verificar si está dentro del rectángulo
       esCorrecto =
-        Math.abs(rotatedX) <= draggedCordillera.width / 2 &&
-        Math.abs(rotatedY) <= draggedCordillera.height / 2;
+        Math.abs(rotatedX) <= draggedElementoGeografico.width / 2 &&
+        Math.abs(rotatedY) <= draggedElementoGeografico.height / 2;
     } else {
       // Si es un punto circular, usar tolerancia
       const distancia = Math.sqrt(
-        Math.pow(x - draggedCordillera.x, 2) +
-          Math.pow(y - draggedCordillera.y, 2),
+        Math.pow(x - draggedElementoGeografico.x, 2) +
+          Math.pow(y - draggedElementoGeografico.y, 2),
       );
-      esCorrecto = distancia <= draggedCordillera.tolerancia;
+      esCorrecto = distancia <= draggedElementoGeografico.tolerancia;
     }
 
     if (esCorrecto) {
       setPuntuacion(puntuacion + 100);
-      setCordillerasColocadas([
-        ...cordillerasColocadas,
+      setElementosGeograficosColocados([
+        ...elementosGeograficosColocados,
         {
-          cordilleraId: draggedCordillera.id,
-          x: draggedCordillera.x,
-          y: draggedCordillera.y,
+          elementoGeograficoId: draggedElementoGeografico.id,
+          x: draggedElementoGeografico.x,
+          y: draggedElementoGeografico.y,
         },
       ]);
-      setCordillerasRestantes(
-        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
+      setElementosGeograficosRestantes(
+        elementosGeograficosRestantes.filter((c) => c.id !== draggedElementoGeografico.id),
       );
     } else {
-      setCordillerasFalladas([...cordillerasFalladas, draggedCordillera]);
-      setCordillerasRestantes(
-        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
+      setElementosGeograficosFallados([...elementosGeograficosFallados, draggedElementoGeografico]);
+      setElementosGeograficosRestantes(
+        elementosGeograficosRestantes.filter((c) => c.id !== draggedElementoGeografico.id),
       );
     }
 
-    setDraggedCordillera(null);
+    setDraggedElementoGeografico(null);
     setDragPosition(null);
   };
 
@@ -201,8 +201,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     e.preventDefault();
   };
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>, cordillera: Cordillera) => {
-    setDraggedCordillera(cordillera);
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>, elementoGeografico: ElementoGeografico) => {
+    setDraggedElementoGeografico(elementoGeografico);
     setTouchActive(true);
     const touch = e.touches[0];
     setDragPosition({ x: touch.clientX, y: touch.clientY });
@@ -216,7 +216,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   };
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!draggedCordillera || !touchActive) return;
+    if (!draggedElementoGeografico || !touchActive) return;
 
     const touch = e.changedTouches[0];
     const mapElement = document.getElementById("game-map");
@@ -229,48 +229,48 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
     let esCorrecto = false;
 
     if (
-      draggedCordillera.width !== null &&
-      draggedCordillera.width !== undefined &&
-      draggedCordillera.height !== null &&
-      draggedCordillera.height !== undefined
+      draggedElementoGeografico.width !== null &&
+      draggedElementoGeografico.width !== undefined &&
+      draggedElementoGeografico.height !== null &&
+      draggedElementoGeografico.height !== undefined
     ) {
-      const dx = x - draggedCordillera.x;
-      const dy = y - draggedCordillera.y;
-      const rotation = (-(draggedCordillera.rotation || 0) * Math.PI) / 180;
+      const dx = x - draggedElementoGeografico.x;
+      const dy = y - draggedElementoGeografico.y;
+      const rotation = (-(draggedElementoGeografico.rotation || 0) * Math.PI) / 180;
       const rotatedX = dx * Math.cos(rotation) - dy * Math.sin(rotation);
       const rotatedY = dx * Math.sin(rotation) + dy * Math.cos(rotation);
       esCorrecto =
-        Math.abs(rotatedX) <= draggedCordillera.width / 2 &&
-        Math.abs(rotatedY) <= draggedCordillera.height / 2;
+        Math.abs(rotatedX) <= draggedElementoGeografico.width / 2 &&
+        Math.abs(rotatedY) <= draggedElementoGeografico.height / 2;
     } else {
       const distancia = Math.sqrt(
-        Math.pow(x - draggedCordillera.x, 2) +
-          Math.pow(y - draggedCordillera.y, 2),
+        Math.pow(x - draggedElementoGeografico.x, 2) +
+          Math.pow(y - draggedElementoGeografico.y, 2),
       );
-      esCorrecto = distancia <= draggedCordillera.tolerancia;
+      esCorrecto = distancia <= draggedElementoGeografico.tolerancia;
     }
 
     if (esCorrecto) {
       setPuntuacion(puntuacion + 100);
-      setCordillerasColocadas([
-        ...cordillerasColocadas,
+      setElementosGeograficosColocados([
+        ...elementosGeograficosColocados,
         {
-          cordilleraId: draggedCordillera.id,
-          x: draggedCordillera.x,
-          y: draggedCordillera.y,
+          elementoGeograficoId: draggedElementoGeografico.id,
+          x: draggedElementoGeografico.x,
+          y: draggedElementoGeografico.y,
         },
       ]);
-      setCordillerasRestantes(
-        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
+      setElementosGeograficosRestantes(
+        elementosGeograficosRestantes.filter((c) => c.id !== draggedElementoGeografico.id),
       );
     } else {
-      setCordillerasFalladas([...cordillerasFalladas, draggedCordillera]);
-      setCordillerasRestantes(
-        cordillerasRestantes.filter((c) => c.id !== draggedCordillera.id),
+      setElementosGeograficosFallados([...elementosGeograficosFallados, draggedElementoGeografico]);
+      setElementosGeograficosRestantes(
+        elementosGeograficosRestantes.filter((c) => c.id !== draggedElementoGeografico.id),
       );
     }
 
-    setDraggedCordillera(null);
+    setDraggedElementoGeografico(null);
     setTouchActive(false);
     setDragPosition(null);
   };
@@ -300,41 +300,41 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="text-xl font-semibold">Cordilleras:</h3>
+          <h3 className="text-xl font-semibold">ElementoGeograficos:</h3>
           <div className="grid grid-cols-2 gap-2">
-            {cordillerasRestantes.map((cordillera) => (
+            {elementosGeograficosRestantes.map((elementoGeografico) => (
               <div
-                key={cordillera.id}
+                key={elementoGeografico.id}
                 draggable
-                onDragStart={(e) => handleDragStart(e, cordillera)}
+                onDragStart={(e) => handleDragStart(e, elementoGeografico)}
                 onDrag={handleDrag}
                 onDragEnd={handleDragEnd}
-                onTouchStart={(e) => handleTouchStart(e, cordillera)}
+                onTouchStart={(e) => handleTouchStart(e, elementoGeografico)}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 className="p-4 bg-gray-500 text-white rounded-lg cursor-grab font-semibold hover:bg-gray-600 transition-colors active:cursor-grabbing touch-none"
               >
-                {cordillera.nombre}
+                {elementoGeografico.nombre}
               </div>
             ))}
           </div>
         </div>
 
-        {cordillerasFalladas.length > 0 && (
+        {elementosGeograficosFallados.length > 0 && (
           <div className="flex flex-col gap-2 mt-4">
             <h3 className="text-xl font-semibold text-red-600">Fallos:</h3>
-            {cordillerasFalladas.map((cordillera) => (
+            {elementosGeograficosFallados.map((elementoGeografico) => (
               <div
-                key={cordillera.id}
+                key={elementoGeografico.id}
                 className="p-4 bg-red-600 text-white rounded-lg font-semibold"
               >
-                {cordillera.nombre}
+                {elementoGeografico.nombre}
               </div>
             ))}
           </div>
         )}
 
-        {cordillerasRestantes.length === 0 && (
+        {elementosGeograficosRestantes.length === 0 && (
           <div className="p-4 bg-green-600 text-white rounded-lg text-center font-bold mt-4">
             ¡Completado! Puntuación final: {puntuacion}
           </div>
@@ -364,24 +364,24 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 
           {/* Modo Mostrar Áreas: Mostrar solo las zonas sin texto */}
           {mostrarAreas &&
-            cordilleras.map((cordillera) => {
+            elementosGeograficos.map((elementoGeografico) => {
               const tieneZonaRectangular =
-                cordillera.width !== null &&
-                cordillera.width !== undefined &&
-                cordillera.height !== null &&
-                cordillera.height !== undefined;
+                elementoGeografico.width !== null &&
+                elementoGeografico.width !== undefined &&
+                elementoGeografico.height !== null &&
+                elementoGeografico.height !== undefined;
 
               return (
-                <div key={`area-${cordillera.id}`}>
+                <div key={`area-${elementoGeografico.id}`}>
                   {tieneZonaRectangular ? (
                     <div
                       className="absolute bg-red-600/20 border-2 border-red-600/80 pointer-events-none"
                       style={{
-                        left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                        top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                        width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
-                        height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
-                        transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                        left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                        top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
+                        width: `${(elementoGeografico.width! / MAP_WIDTH) * 100}%`,
+                        height: `${(elementoGeografico.height! / MAP_HEIGHT) * 100}%`,
+                        transform: `translate(-50%, -50%) rotate(${elementoGeografico.rotation || 0}deg)`,
                         zIndex: 5,
                       }}
                     />
@@ -389,10 +389,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                     <div
                       className="absolute border-2 border-red-600/60 rounded-full bg-red-600/10 pointer-events-none"
                       style={{
-                        left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                        top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                        width: `${((cordillera.tolerancia * 2) / MAP_WIDTH) * 100}%`,
-                        height: `${((cordillera.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                        left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                        top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
+                        width: `${((elementoGeografico.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                        height: `${((elementoGeografico.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
                         transform: "translate(-50%, -50%)",
                         zIndex: 5,
                       }}
@@ -403,33 +403,33 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             })}
 
           {testMode &&
-            cordilleras.map((cordillera) => {
+            elementosGeograficos.map((elementoGeografico) => {
               const tieneZonaRectangular =
-                cordillera.width !== null &&
-                cordillera.width !== undefined &&
-                cordillera.height !== null &&
-                cordillera.height !== undefined;
+                elementoGeografico.width !== null &&
+                elementoGeografico.width !== undefined &&
+                elementoGeografico.height !== null &&
+                elementoGeografico.height !== undefined;
 
               return (
-                <div key={`test-${cordillera.id}`}>
+                <div key={`test-${elementoGeografico.id}`}>
                   {tieneZonaRectangular ? (
                     <>
                       <div
                         className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
                         style={{
-                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                          width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
-                          height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
-                          transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                          left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                          top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
+                          width: `${(elementoGeografico.width! / MAP_WIDTH) * 100}%`,
+                          height: `${(elementoGeografico.height! / MAP_HEIGHT) * 100}%`,
+                          transform: `translate(-50%, -50%) rotate(${elementoGeografico.rotation || 0}deg)`,
                           zIndex: 5,
                         }}
                       />
                       <div
                         className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                         style={{
-                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                          left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                          top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
                           transform: "translate(-50%, -50%)",
                           zIndex: 6,
                         }}
@@ -440,10 +440,10 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                       <div
                         className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
                         style={{
-                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                          width: `${((cordillera.tolerancia * 2) / MAP_WIDTH) * 100}%`,
-                          height: `${((cordillera.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                          left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                          top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
+                          width: `${((elementoGeografico.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                          height: `${((elementoGeografico.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
                           transform: "translate(-50%, -50%)",
                           zIndex: 5,
                         }}
@@ -451,8 +451,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                       <div
                         className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                         style={{
-                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                          left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                          top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
                           transform: "translate(-50%, -50%)",
                           zIndex: 6,
                         }}
@@ -462,32 +462,32 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute text-[10px] text-green-600 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-green-600 whitespace-nowrap pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
+                      left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                      top: `${((elementoGeografico.y - 20) / MAP_HEIGHT) * 100}%`,
                       transform: "translateX(-50%)",
                       zIndex: 7,
                     }}
                   >
-                    {cordillera.nombre}
+                    {elementoGeografico.nombre}
                   </div>
                 </div>
               );
             })}
 
-          {cordillerasColocadas.map((colocada) => {
-            const cordillera = cordilleras.find(
-              (c) => c.id === colocada.cordilleraId,
+          {elementosGeograficosColocados.map((colocada) => {
+            const elementoGeografico = elementosGeograficos.find(
+              (c) => c.id === colocada.elementoGeograficoId,
             );
-            if (!cordillera) return null;
+            if (!elementoGeografico) return null;
 
             const tieneZonaRectangular =
-              cordillera.width !== null &&
-              cordillera.width !== undefined &&
-              cordillera.height !== null &&
-              cordillera.height !== undefined;
+              elementoGeografico.width !== null &&
+              elementoGeografico.width !== undefined &&
+              elementoGeografico.height !== null &&
+              elementoGeografico.height !== undefined;
 
             return (
-              <div key={colocada.cordilleraId}>
+              <div key={colocada.elementoGeograficoId}>
                 {/* Mostrar zona rectangular si aplica */}
                 {tieneZonaRectangular ? (
                   <div
@@ -495,9 +495,9 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                     style={{
                       left: `${(colocada.x / MAP_WIDTH) * 100}%`,
                       top: `${(colocada.y / MAP_HEIGHT) * 100}%`,
-                      width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
-                      height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
-                      transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                      width: `${(elementoGeografico.width! / MAP_WIDTH) * 100}%`,
+                      height: `${(elementoGeografico.height! / MAP_HEIGHT) * 100}%`,
+                      transform: `translate(-50%, -50%) rotate(${elementoGeografico.rotation || 0}deg)`,
                       zIndex: 8,
                     }}
                   />
@@ -508,8 +508,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                     style={{
                       left: `${(colocada.x / MAP_WIDTH) * 100}%`,
                       top: `${(colocada.y / MAP_HEIGHT) * 100}%`,
-                      width: `${((cordillera.tolerancia * 2) / MAP_WIDTH) * 100}%`,
-                      height: `${((cordillera.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                      width: `${((elementoGeografico.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                      height: `${((elementoGeografico.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 8,
                     }}
@@ -537,7 +537,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                     zIndex: 11,
                   }}
                 >
-                  {cordillera.nombre}
+                  {elementoGeografico.nombre}
                 </div>
               </div>
             );
@@ -546,7 +546,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
       </div>
 
       {/* Elemento visual flotante durante drag */}
-      {draggedCordillera && dragPosition && (
+      {draggedElementoGeografico && dragPosition && (
         <div
           className="fixed pointer-events-none z-[9999]"
           style={{
@@ -556,7 +556,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
           }}
         >
           <div className="bg-blue-600 text-white px-4 py-3 rounded-lg shadow-2xl font-semibold border-2 border-white">
-            {draggedCordillera.nombre}
+            {draggedElementoGeografico.nombre}
           </div>
         </div>
       )}
@@ -571,14 +571,14 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             className="bg-white rounded-2xl p-12 shadow-2xl text-center max-w-md mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {cordillerasFalladas.length === 0 ? (
+            {elementosGeograficosFallados.length === 0 ? (
               <>
                 <div className="text-6xl mb-6">🎉</div>
                 <h2 className="text-4xl font-bold text-gray-800 mb-4">
                   ¡Perfecto!
                 </h2>
                 <p className="text-xl text-gray-600 mb-6">
-                  Has acertado todas las cordilleras sin fallos
+                  Has acertado todas las elementosGeograficos sin fallos
                 </p>
                 <p className="text-3xl font-bold text-green-600 mb-8">
                   Puntuación: {puntuacion}
@@ -597,7 +597,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                   Puntuación: {puntuacion}
                 </p>
                 <p className="text-sm text-red-600 mb-6">
-                  Fallos: {cordillerasFalladas.length}
+                  Fallos: {elementosGeograficosFallados.length}
                 </p>
               </>
             )}

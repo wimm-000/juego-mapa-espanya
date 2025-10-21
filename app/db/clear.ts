@@ -1,11 +1,11 @@
 import { db } from "./index";
-import { cordilleras } from "./schema";
+import { elementosGeograficos } from "./schema";
 
 async function clear() {
   console.log("🗑️  Clearing database...");
   
   // Eliminar todos los registros
-  await db.delete(cordilleras);
+  await db.delete(elementosGeograficos);
   
   console.log("✅ Database cleared successfully!");
   process.exit(0);

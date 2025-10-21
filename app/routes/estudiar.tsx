@@ -1,6 +1,6 @@
 import type { Route } from "./+types/estudiar";
 import { Link } from "react-router";
-import { getAllCordilleras } from "../db/queries";
+import { getAllElementosGeograficos } from "../db/queries";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
 export function meta({}: Route.MetaArgs) {
@@ -11,12 +11,12 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader() {
-  const cordilleras = await getAllCordilleras();
-  return { cordilleras };
+  const elementosGeograficos = await getAllElementosGeograficos();
+  return { elementosGeograficos };
 }
 
 export default function Estudiar({ loaderData }: Route.ComponentProps) {
-  const { cordilleras } = loaderData;
+  const { elementosGeograficos } = loaderData;
 
   return (
     <div className="flex flex-col items-center min-h-screen gap-4 p-8">
@@ -27,7 +27,7 @@ export default function Estudiar({ loaderData }: Route.ComponentProps) {
         🏠 Home
       </Link>
 
-      <h1 className="text-3xl font-bold">Estudiar Cordilleras de España</h1>
+      <h1 className="text-3xl font-bold">Estudiar Elementos Geográficos de España</h1>
 
       <div
         className="relative w-full max-w-4xl border-2 border-gray-800 bg-blue-50 rounded-lg overflow-hidden shadow-lg"
@@ -39,32 +39,32 @@ export default function Estudiar({ loaderData }: Route.ComponentProps) {
           className="w-full h-full object-contain"
         />
 
-        {cordilleras.map((cordillera) => {
-          const tieneZonaRectangular = cordillera.width !== null && 
-                                      cordillera.width !== undefined && 
-                                      cordillera.height !== null && 
-                                      cordillera.height !== undefined;
+        {elementosGeograficos.map((elementoGeografico) => {
+          const tieneZonaRectangular = elementoGeografico.width !== null && 
+                                      elementoGeografico.width !== undefined && 
+                                      elementoGeografico.height !== null && 
+                                      elementoGeografico.height !== undefined;
           
           return (
-            <div key={cordillera.id}>
+            <div key={elementoGeografico.id}>
               {tieneZonaRectangular ? (
                 <>
                   <div
                     className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                      width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
-                      height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
-                      transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                      left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                      top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
+                      width: `${(elementoGeografico.width! / MAP_WIDTH) * 100}%`,
+                      height: `${(elementoGeografico.height! / MAP_HEIGHT) * 100}%`,
+                      transform: `translate(-50%, -50%) rotate(${elementoGeografico.rotation || 0}deg)`,
                       zIndex: 5
                     }}
                   />
                   <div
                     className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                      left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                      top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 6
                     }}
@@ -75,10 +75,10 @@ export default function Estudiar({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                      width: `${(cordillera.tolerancia * 2 / MAP_WIDTH) * 100}%`,
-                      height: `${(cordillera.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
+                      left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                      top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
+                      width: `${(elementoGeografico.tolerancia * 2 / MAP_WIDTH) * 100}%`,
+                      height: `${(elementoGeografico.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 5
                     }}
@@ -86,8 +86,8 @@ export default function Estudiar({ loaderData }: Route.ComponentProps) {
                   <div
                     className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
                     style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                      left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                      top: `${(elementoGeografico.y / MAP_HEIGHT) * 100}%`,
                       transform: 'translate(-50%, -50%)',
                       zIndex: 6
                     }}
@@ -97,13 +97,13 @@ export default function Estudiar({ loaderData }: Route.ComponentProps) {
               <div
                 className="absolute text-[10px] text-green-600 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-green-600 whitespace-nowrap pointer-events-none"
                 style={{
-                  left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                  top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
+                  left: `${(elementoGeografico.x / MAP_WIDTH) * 100}%`,
+                  top: `${((elementoGeografico.y - 20) / MAP_HEIGHT) * 100}%`,
                   transform: 'translateX(-50%)',
                   zIndex: 7
                 }}
               >
-                {cordillera.nombre}
+                {elementoGeografico.nombre}
               </div>
             </div>
           );

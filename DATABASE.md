@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-The project has been integrated with SQLite database using Drizzle ORM for persistent storage of cordilleras (mountain ranges).
+The project has been integrated with SQLite database using Drizzle ORM for persistent storage of elementos_geograficos (geographic elements).
 
 ## 🗂️ File Structure
 
@@ -19,7 +19,7 @@ sqlite.db                 # SQLite database file (gitignored)
 
 ## 📊 Schema
 
-### `cordilleras` Table
+### `elementos_geograficos` Table
 
 | Column     | Type   | Nullable | Description                          |
 |------------|--------|----------|--------------------------------------|
@@ -36,22 +36,22 @@ sqlite.db                 # SQLite database file (gitignored)
 
 ### `queries.ts`
 
-- `getAllCordilleras()` - Get all cordilleras
-- `getCordilleraById(id)` - Get single cordillera by ID
-- `createCordillera(data)` - Create new cordillera
-- `updateCordillera(id, data)` - Update existing cordillera
-- `deleteCordillera(id)` - Delete cordillera
+- `getAllElementosGeograficos()` - Get all cordilleras
+- `getElementoGeograficoById(id)` - Get single cordillera by ID
+- `createElementoGeografico(data)` - Create new cordillera
+- `updateElementoGeografico(id, data)` - Update existing cordillera
+- `deleteElementoGeografico(id)` - Delete cordillera
 
 ## 🚀 Usage in Routes
 
 ### Juego Route (`app/routes/juego.tsx`)
 
 ```typescript
-import { getAllCordilleras } from "../db/queries";
-import type { Cordillera } from "../db/schema";
+import { getAllElementosGeograficos } from "../db/queries";
+import type { ElementoGeografico } from "../db/schema";
 
 export async function loader() {
-  const cordilleras = await getAllCordilleras();
+  const cordilleras = await getAllElementosGeograficos();
   return { cordilleras };
 }
 
@@ -64,11 +64,11 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
 ### Dev Route (`app/routes/dev.tsx`)
 
 ```typescript
-import { getAllCordilleras } from "../db/queries";
-import type { Cordillera } from "../db/schema";
+import { getAllElementosGeograficos } from "../db/queries";
+import type { ElementoGeografico } from "../db/schema";
 
 export async function loader() {
-  const cordilleras = await getAllCordilleras();
+  const cordilleras = await getAllElementosGeograficos();
   return { cordilleras };
 }
 
@@ -90,10 +90,10 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
 ## 🌱 Initial Data
 
-The database is seeded with 6 cordilleras:
+The database is seeded with 6 elementos_geograficos:
 
 1. **Pirineos** - (490, 80) - tolerance: 60
-2. **Cordillera Cantábrica** - (150, 90) - tolerance: 60
+2. **ElementoGeografico Cantábrica** - (150, 90) - tolerance: 60
 3. **Sistema Ibérico** - (350, 200) - tolerance: 60
 4. **Sierra Morena** - (220, 350) - tolerance: 60
 5. **Sistemas Béticos** - (300, 430) - tolerance: 60
@@ -104,7 +104,7 @@ The database is seeded with 6 cordilleras:
 ### Before
 ```typescript
 // app/data/cordilleras.ts
-export const cordilleras: Cordillera[] = [
+export const cordilleras: ElementoGeografico[] = [
   { id: "1", nombre: "Pirineos", x: 490, y: 80, tolerancia: 60 },
   // ...
 ];
@@ -114,7 +114,7 @@ export const cordilleras: Cordillera[] = [
 ```typescript
 // app/routes/juego.tsx
 export async function loader() {
-  const cordilleras = await getAllCordilleras();
+  const cordilleras = await getAllElementosGeograficos();
   return { cordilleras };
 }
 ```
@@ -144,7 +144,7 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
   
-  await createCordillera({
+  await createElementoGeografico({
     id: crypto.randomUUID(),
     nombre: data.nombre as string,
     x: Number(data.x),

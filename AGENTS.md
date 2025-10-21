@@ -1,4 +1,4 @@
-# Agent Guidelines for juego-cordilleras-espanya
+# Agent Guidelines for juego-elementos-geograficos-espanya
 
 ## Build/Lint/Test Commands
 - **Dev**: `npm run dev` - Start development server at http://localhost:5173
@@ -12,7 +12,7 @@
 - **Imports**: Use `~/` alias for app imports (e.g., `import { db } from "~/db"`). Group: React Router types first, then React, then local modules
 - **Components**: Functional components with TypeScript. Export `meta` and `loader` for routes
 - **Naming**: camelCase for variables/functions, PascalCase for components/types
-- **Database**: Drizzle ORM with SQLite. Use schema types (`Cordillera`, `NewCordillera`). Query functions in `~/db/queries.ts`
+- **Database**: Drizzle ORM with SQLite. Use schema types (`ElementoGeografico`, `NewElementoGeografico`). Query functions in `~/db/queries.ts`
 - **Styling**: TailwindCSS utility classes. No CSS modules or styled-components
 - **Error Handling**: Use async/await. Return undefined for not-found cases (see `getCordilleraById`)
 - **State**: React hooks (`useState`, `useEffect`). Keep state local to components

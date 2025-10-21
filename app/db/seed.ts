@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { cordilleras } from "./schema";
+import { elementosGeograficos } from "./schema";
 
 const initialData = [
   { id: "1760995484540", nombre: "Macizo galaico", x: 199, y: 62, tolerancia: 29 },
@@ -19,10 +19,10 @@ async function seed() {
   console.log("🌱 Seeding database...");
   
   // Limpiar tabla existente
-  await db.delete(cordilleras);
-  
+  await db.delete(elementosGeograficos);
+
   // Insertar datos iniciales
-  await db.insert(cordilleras).values(initialData);
+  await db.insert(elementosGeograficos).values(initialData);
   
   console.log("✅ Database seeded successfully!");
   process.exit(0);

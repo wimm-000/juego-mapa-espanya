@@ -1,6 +1,6 @@
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
-export const cordilleras = sqliteTable("cordilleras", {
+export const elementosGeograficos = sqliteTable("elementos_geograficos", {
   id: text("id").primaryKey(),
   nombre: text("nombre").notNull(),
   x: real("x").notNull(),
@@ -16,7 +16,7 @@ export const settings = sqliteTable("settings", {
   testMode: integer("testMode", { mode: "boolean" }).notNull().default(false),
 });
 
-export type Cordillera = typeof cordilleras.$inferSelect;
-export type NewCordillera = typeof cordilleras.$inferInsert;
+export type ElementoGeografico = typeof elementosGeograficos.$inferSelect;
+export type NewElementoGeografico = typeof elementosGeograficos.$inferInsert;
 export type Settings = typeof settings.$inferSelect;
 export type NewSettings = typeof settings.$inferInsert;

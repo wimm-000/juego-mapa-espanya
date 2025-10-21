@@ -20,7 +20,7 @@ export default function Home() {
       <p className="text-xl text-center text-gray-600 max-w-2xl m-0">
         ¡Aprende la geografía de España de forma divertida! 🎯
         <br />
-        Coloca las principales cordilleras en su ubicación correcta
+        Coloca los principales elementos geográficos en su ubicación correcta
       </p>
 
       <div className="flex gap-4 flex-wrap justify-center">
