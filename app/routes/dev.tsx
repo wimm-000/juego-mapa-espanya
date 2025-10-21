@@ -1,5 +1,5 @@
 import type { Route } from "./+types/dev";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useFetcher } from "react-router";
 import {
   getAllElementosGeograficos,
@@ -141,6 +141,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const [categoriaEditando, setCategoriaEditando] = useState<string | null>(null);
   const [categoriaEditandoNombre, setCategoriaEditandoNombre] = useState("");
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
+  const puntosRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const puntosContainerRef = useRef<HTMLDivElement>(null);
 
   // Combinar cordilleras de BD con puntos de localStorage en el estado inicial
   useEffect(() => {
@@ -319,6 +321,21 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     setMostrarElementoGeograficos(false);
   }, [cordilleras, categorias]);
 
+  // Auto-scroll and expand selected point
+  useEffect(() => {
+    if (puntoSeleccionado && puntosRefs.current[puntoSeleccionado]) {
+      const element = puntosRefs.current[puntoSeleccionado];
+      if (element) {
+        // Scroll the element into view
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'nearest'
+        });
+      }
+    }
+  }, [puntoSeleccionado]);
+
   return (
     <div className="flex min-h-screen p-8 gap-8 bg-gray-100">
       {/* Panel lateral */}
@@ -403,6 +420,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               {puntos.map((punto) => (
                 <div
                   key={punto.id}
+                  ref={(el) => { puntosRefs.current[punto.id] = el; }}
                   className={`p-3 rounded ${puntoSeleccionado === punto.id ? "bg-blue-50 border-2 border-blue-600" : "bg-gray-50"} text-sm cursor-pointer`}
                   onClick={() =>
                     setPuntoSeleccionado(
