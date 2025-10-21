@@ -188,20 +188,14 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             to="/"
             className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors no-underline"
           >
-            🏠 Home
+            🏠 Volver al inicio
           </Link>
           <button
             onClick={() => setMostrarAreas(!mostrarAreas)}
             className={`px-4 py-2 ${mostrarAreas ? "bg-yellow-500" : "bg-gray-500"} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
-            {mostrarAreas ? "📍 Áreas ON" : "📍 Mostrar Áreas"}
+            {mostrarAreas ? "💀 Activar modo dificil" : "🚩 Activar modo facil"}
           </button>
-          {/* <button
-            onClick={() => setModoTest(!modoTest)}
-            className={`px-4 py-2 ${modoTest ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
-          >
-            {modoTest ? '🧪 Test ON' : '🧪 Test'}
-          </button> */}
           <button
             onClick={handleReset}
             className="px-4 py-2 bg-gray-500 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-gray-600 transition-colors"
@@ -218,7 +212,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
                 key={cordillera.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, cordillera)}
-                className="p-4 bg-blue-600 text-white rounded-lg cursor-grab font-semibold hover:bg-blue-700 transition-colors active:cursor-grabbing"
+                className="p-4 bg-gray-500 text-white rounded-lg cursor-grab font-semibold hover:bg-gray-600 transition-colors active:cursor-grabbing"
               >
                 {cordillera.nombre}
               </div>
@@ -307,75 +301,77 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
               );
             })}
 
-          {testMode && cordilleras.map((cordillera) => {
-            const tieneZonaRectangular = cordillera.width !== null && 
-                                        cordillera.width !== undefined && 
-                                        cordillera.height !== null && 
-                                        cordillera.height !== undefined;
-            
-            return (
-            <div key={`test-${cordillera.id}`}>
-              {tieneZonaRectangular ? (
-                <>
+          {testMode &&
+            cordilleras.map((cordillera) => {
+              const tieneZonaRectangular =
+                cordillera.width !== null &&
+                cordillera.width !== undefined &&
+                cordillera.height !== null &&
+                cordillera.height !== undefined;
+
+              return (
+                <div key={`test-${cordillera.id}`}>
+                  {tieneZonaRectangular ? (
+                    <>
+                      <div
+                        className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
+                        style={{
+                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                          width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
+                          height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
+                          transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                          zIndex: 5,
+                        }}
+                      />
+                      <div
+                        className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
+                        style={{
+                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                          transform: "translate(-50%, -50%)",
+                          zIndex: 6,
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
+                        style={{
+                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                          width: `${((cordillera.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                          height: `${((cordillera.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                          transform: "translate(-50%, -50%)",
+                          zIndex: 5,
+                        }}
+                      />
+                      <div
+                        className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
+                        style={{
+                          left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                          top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                          transform: "translate(-50%, -50%)",
+                          zIndex: 6,
+                        }}
+                      />
+                    </>
+                  )}
                   <div
-                    className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
+                    className="absolute text-[10px] text-green-600 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-green-600 whitespace-nowrap pointer-events-none"
                     style={{
                       left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                      width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
-                      height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
-                      transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
-                      zIndex: 5
+                      top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
+                      transform: "translateX(-50%)",
+                      zIndex: 7,
                     }}
-                  />
-                  <div
-                    className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
-                    style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 6
-                    }}
-                  />
-                </>
-              ) : (
-                <>
-                  <div
-                    className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
-                    style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                      width: `${(cordillera.tolerancia * 2 / MAP_WIDTH) * 100}%`,
-                      height: `${(cordillera.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 5
-                    }}
-                  />
-                  <div
-                    className="absolute w-2 h-2 bg-green-600 rounded-full pointer-events-none"
-                    style={{
-                      left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                      top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 6
-                    }}
-                  />
-                </>
-              )}
-              <div
-                className="absolute text-[10px] text-green-600 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-green-600 whitespace-nowrap pointer-events-none"
-                style={{
-                  left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                  top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
-                  transform: 'translateX(-50%)',
-                  zIndex: 7
-                }}
-              >
-                {cordillera.nombre}
-              </div>
-            </div>
-            );
-          })}
+                  >
+                    {cordillera.nombre}
+                  </div>
+                </div>
+              );
+            })}
 
           {cordillerasColocadas.map((colocada) => {
             const cordillera = cordilleras.find(

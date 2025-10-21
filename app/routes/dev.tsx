@@ -1,7 +1,14 @@
 import type { Route } from "./+types/dev";
 import { useState, useEffect } from "react";
 import { Link, useFetcher } from "react-router";
-import { getAllCordilleras, deleteCordillera, updateCordillera, createCordillera, getSettings, updateTestMode } from "../db/queries";
+import {
+  getAllCordilleras,
+  deleteCordillera,
+  updateCordillera,
+  createCordillera,
+  getSettings,
+  updateTestMode,
+} from "../db/queries";
 import type { Cordillera } from "../db/schema";
 import { MAP_WIDTH, MAP_HEIGHT } from "../constants/map";
 
@@ -19,7 +26,10 @@ interface Punto {
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Modo Desarrollo - Coordenadas del Mapa" },
-    { name: "description", content: "Herramienta para obtener coordenadas del mapa" },
+    {
+      name: "description",
+      content: "Herramienta para obtener coordenadas del mapa",
+    },
   ];
 }
 
@@ -32,18 +42,19 @@ export async function loader() {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
-  
+
   if (intent === "delete") {
     const id = formData.get("id") as string;
     await deleteCordillera(id);
   } else if (intent === "update") {
     const id = formData.get("id") as string;
     const data: Partial<Cordillera> = {};
-    
+
     if (formData.has("x")) data.x = Number(formData.get("x"));
     if (formData.has("y")) data.y = Number(formData.get("y"));
     if (formData.has("nombre")) data.nombre = formData.get("nombre") as string;
-    if (formData.has("tolerancia")) data.tolerancia = Number(formData.get("tolerancia"));
+    if (formData.has("tolerancia"))
+      data.tolerancia = Number(formData.get("tolerancia"));
     if (formData.has("width")) {
       const width = formData.get("width");
       data.width = width ? Number(width) : null;
@@ -56,7 +67,7 @@ export async function action({ request }: Route.ActionArgs) {
       const rotation = formData.get("rotation");
       data.rotation = rotation ? Number(rotation) : null;
     }
-    
+
     await updateCordillera(id, data);
   } else if (intent === "create") {
     const newCordillera = {
@@ -65,17 +76,26 @@ export async function action({ request }: Route.ActionArgs) {
       x: Number(formData.get("x")),
       y: Number(formData.get("y")),
       tolerancia: Number(formData.get("tolerancia")),
-      width: formData.has("width") && formData.get("width") ? Number(formData.get("width")) : null,
-      height: formData.has("height") && formData.get("height") ? Number(formData.get("height")) : null,
-      rotation: formData.has("rotation") && formData.get("rotation") ? Number(formData.get("rotation")) : null,
+      width:
+        formData.has("width") && formData.get("width")
+          ? Number(formData.get("width"))
+          : null,
+      height:
+        formData.has("height") && formData.get("height")
+          ? Number(formData.get("height"))
+          : null,
+      rotation:
+        formData.has("rotation") && formData.get("rotation")
+          ? Number(formData.get("rotation"))
+          : null,
     };
-    
+
     await createCordillera(newCordillera);
   } else if (intent === "toggleTestMode") {
     const enabled = formData.get("enabled") === "true";
     await updateTestMode(enabled);
   }
-  
+
   return { success: true };
 }
 
@@ -86,15 +106,20 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const [nombrePunto, setNombrePunto] = useState("");
   const [mostrarCordilleras, setMostrarCordilleras] = useState(true);
   const [tolerancia, setTolerancia] = useState(30);
-  const [puntoSeleccionado, setPuntoSeleccionado] = useState<string | null>(null);
+  const [puntoSeleccionado, setPuntoSeleccionado] = useState<string | null>(
+    null,
+  );
   const [modoZona, setModoZona] = useState(false);
   const [puntoArrastrando, setPuntoArrastrando] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{ id: string; nombre: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    id: string;
+    nombre: string;
+  } | null>(null);
 
   // Combinar cordilleras de BD con puntos de localStorage en el estado inicial
   useEffect(() => {
     // Convertir cordilleras de BD a formato Punto para trabajar con ellas
-    const cordillerasAsPuntos: Punto[] = cordilleras.map(c => ({
+    const cordillerasAsPuntos: Punto[] = cordilleras.map((c) => ({
       id: c.id,
       nombre: c.nombre,
       x: c.x,
@@ -104,7 +129,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
       height: c.height ?? undefined,
       rotation: c.rotation ?? undefined,
     }));
-    
+
     // Invertir el orden para mostrar los más recientes primero
     setPuntos(cordillerasAsPuntos.reverse());
     setMostrarCordilleras(false); // No necesitamos mostrar cordilleras separadas
@@ -112,12 +137,12 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (puntoSeleccionado || puntoArrastrando) return;
-    
+
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
     const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
     const y = Math.round(((e.clientX - rect.top) / rect.height) * MAP_HEIGHT);
-    
+
     if (nombrePunto.trim()) {
       const id = `${Date.now()}`;
       const nuevoPunto: Punto = {
@@ -128,13 +153,13 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         tolerancia: tolerancia,
         width: modoZona ? 100 : undefined,
         height: modoZona ? 60 : undefined,
-        rotation: modoZona ? 0 : undefined
+        rotation: modoZona ? 0 : undefined,
       };
-      
+
       // Añadir al principio de la lista (orden invertido)
       setPuntos([nuevoPunto, ...puntos]);
       setNombrePunto("");
-      
+
       // Guardar en la base de datos
       const formData = new FormData();
       formData.append("intent", "create");
@@ -152,9 +177,12 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
     }
   };
 
-  const handlePuntoDragStart = (e: React.DragEvent<HTMLDivElement>, puntoId: string) => {
+  const handlePuntoDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    puntoId: string,
+  ) => {
     setPuntoArrastrando(puntoId);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handlePuntoDragEnd = () => {
@@ -164,7 +192,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const handleMapDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     if (puntoArrastrando) {
       e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
+      e.dataTransfer.dropEffect = "move";
     }
   };
 
@@ -187,58 +215,60 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
   const confirmarEliminacion = () => {
     if (!confirmDelete) return;
-    
+
     const { id } = confirmDelete;
-    
+
     // Eliminar del estado local
-    setPuntos(puntos.filter(p => p.id !== id));
+    setPuntos(puntos.filter((p) => p.id !== id));
     if (puntoSeleccionado === id) {
       setPuntoSeleccionado(null);
     }
-    
+
     // Eliminar de la base de datos si no es un ID generado temporalmente
-    if (!id.includes('-')) {
+    if (!id.includes("-")) {
       const formData = new FormData();
       formData.append("intent", "delete");
       formData.append("id", id);
       fetcher.submit(formData, { method: "post" });
     }
-    
+
     setConfirmDelete(null);
   };
 
   const actualizarPunto = (id: string, cambios: Partial<Punto>) => {
     // Actualizar estado local
-    setPuntos(puntos.map(p => {
-      if (p.id === id) {
-        if ('width' in cambios && cambios.width === undefined) {
-          const { width, height, rotation, ...resto } = p;
-          return { ...resto, ...cambios };
+    setPuntos(
+      puntos.map((p) => {
+        if (p.id === id) {
+          if ("width" in cambios && cambios.width === undefined) {
+            const { width, height, rotation, ...resto } = p;
+            return { ...resto, ...cambios };
+          }
+          return { ...p, ...cambios };
         }
-        return { ...p, ...cambios };
-      }
-      return p;
-    }));
-    
+        return p;
+      }),
+    );
+
     // Persistir cambios en la base de datos si es un punto de DB (no temporal)
-    if (!id.includes('-')) {
+    if (!id.includes("-")) {
       const formData = new FormData();
       formData.append("intent", "update");
       formData.append("id", id);
-      
+
       // Añadir solo los campos que han cambiado
       Object.entries(cambios).forEach(([key, value]) => {
-        if (value !== undefined && key !== 'id') {
+        if (value !== undefined && key !== "id") {
           formData.append(key, value.toString());
         }
       });
-      
+
       fetcher.submit(formData, { method: "post" });
     }
   };
 
   useEffect(() => {
-    const cordillerasAsPuntos = cordilleras.map(c => ({
+    const cordillerasAsPuntos = cordilleras.map((c) => ({
       id: c.id,
       nombre: c.nombre,
       x: c.x,
@@ -259,17 +289,18 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         {/* Header */}
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex justify-between items-center mb-4">
+            <Link to="/" className="no-underline">
+              <button className="px-3 py-2 bg-green-600 text-white border-none rounded-lg font-semibold cursor-pointer text-sm hover:bg-green-700 transition-colors">
+                🏠 Volver al Inicio
+              </button>
+            </Link>
             <h2 className="text-2xl font-bold m-0 text-gray-800">
               Modo Desarrollo
             </h2>
-            <Link to="/" className="no-underline">
-              <button className="px-3 py-2 bg-green-600 text-white border-none rounded-lg font-semibold cursor-pointer text-sm hover:bg-green-700 transition-colors">
-                🏠 Home
-              </button>
-            </Link>
           </div>
           <p className="text-sm text-gray-600 mb-0">
-            Haz clic en el mapa para añadir puntos. Arrastra los puntos/zonas para reposicionarlos. Selecciona para editar.
+            Haz clic en el mapa para añadir puntos. Arrastra los puntos/zonas
+            para reposicionarlos. Selecciona para editar.
           </p>
         </div>
 
@@ -285,7 +316,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
             placeholder="Ej: Pirineos"
             className="w-full p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
           />
-          
+
           <label className="block mt-4 mb-2 font-semibold text-gray-800">
             Tolerancia (píxeles):
           </label>
@@ -303,7 +334,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               onChange={(e) => setModoZona(e.target.checked)}
               className="mr-2"
             />
-            <span className="font-semibold text-gray-800">Crear como zona rectangular</span>
+            <span className="font-semibold text-gray-800">
+              Crear como zona rectangular
+            </span>
           </label>
         </div>
 
@@ -317,12 +350,18 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               {puntos.map((punto) => (
                 <div
                   key={punto.id}
-                  className={`p-3 rounded ${puntoSeleccionado === punto.id ? 'bg-blue-50 border-2 border-blue-600' : 'bg-gray-50'} text-sm cursor-pointer`}
-                  onClick={() => setPuntoSeleccionado(puntoSeleccionado === punto.id ? null : punto.id)}
+                  className={`p-3 rounded ${puntoSeleccionado === punto.id ? "bg-blue-50 border-2 border-blue-600" : "bg-gray-50"} text-sm cursor-pointer`}
+                  onClick={() =>
+                    setPuntoSeleccionado(
+                      puntoSeleccionado === punto.id ? null : punto.id,
+                    )
+                  }
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex-1">
-                      <div className="font-semibold text-gray-800 text-sm">{punto.nombre}</div>
+                      <div className="font-semibold text-gray-800 text-sm">
+                        {punto.nombre}
+                      </div>
                       <div className="text-gray-600 text-xs mt-1">
                         x: {punto.x}, y: {punto.y}, tol: {punto.tolerancia}
                       </div>
@@ -350,14 +389,24 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                           onClick={(e) => {
                             e.stopPropagation();
                             if (punto.width === undefined) {
-                              actualizarPunto(punto.id, { width: 100, height: 60, rotation: 0 });
+                              actualizarPunto(punto.id, {
+                                width: 100,
+                                height: 60,
+                                rotation: 0,
+                              });
                             } else {
-                              actualizarPunto(punto.id, { width: undefined, height: undefined, rotation: undefined });
+                              actualizarPunto(punto.id, {
+                                width: undefined,
+                                height: undefined,
+                                rotation: undefined,
+                              });
                             }
                           }}
                           className="w-full px-2 py-2 bg-gray-600 text-white border-none rounded text-xs cursor-pointer font-semibold hover:bg-gray-700 transition-colors"
                         >
-                          {punto.width === undefined ? '📦 Convertir a Zona' : '🎯 Convertir a Punto'}
+                          {punto.width === undefined
+                            ? "📦 Convertir a Zona"
+                            : "🎯 Convertir a Punto"}
                         </button>
                       </div>
 
@@ -372,7 +421,11 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                               min="20"
                               max="300"
                               value={punto.width}
-                              onChange={(e) => actualizarPunto(punto.id, { width: Number(e.target.value) })}
+                              onChange={(e) =>
+                                actualizarPunto(punto.id, {
+                                  width: Number(e.target.value),
+                                })
+                              }
                               className="w-full"
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -386,7 +439,11 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                               min="20"
                               max="300"
                               value={punto.height}
-                              onChange={(e) => actualizarPunto(punto.id, { height: Number(e.target.value) })}
+                              onChange={(e) =>
+                                actualizarPunto(punto.id, {
+                                  height: Number(e.target.value),
+                                })
+                              }
                               className="w-full"
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -400,7 +457,11 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                               min="-180"
                               max="180"
                               value={punto.rotation || 0}
-                              onChange={(e) => actualizarPunto(punto.id, { rotation: Number(e.target.value) })}
+                              onChange={(e) =>
+                                actualizarPunto(punto.id, {
+                                  rotation: Number(e.target.value),
+                                })
+                              }
                               className="w-full"
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -416,7 +477,11 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                             min="10"
                             max="150"
                             value={punto.tolerancia}
-                            onChange={(e) => actualizarPunto(punto.id, { tolerancia: Number(e.target.value) })}
+                            onChange={(e) =>
+                              actualizarPunto(punto.id, {
+                                tolerancia: Number(e.target.value),
+                              })
+                            }
                             className="w-full"
                             onClick={(e) => e.stopPropagation()}
                           />
@@ -447,9 +512,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
         <div className="bg-white p-6 rounded-lg shadow flex flex-col gap-3">
           <button
             onClick={() => setMostrarCordilleras(!mostrarCordilleras)}
-            className={`w-full px-4 py-2 ${mostrarCordilleras ? 'bg-green-600' : 'bg-gray-600'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+            className={`w-full px-4 py-2 ${mostrarCordilleras ? "bg-green-600" : "bg-gray-600"} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
-            {mostrarCordilleras ? 'Ocultar' : 'Mostrar'} Cordilleras Existentes
+            {mostrarCordilleras ? "Ocultar" : "Mostrar"} Cordilleras Existentes
           </button>
 
           <button
@@ -459,9 +524,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               formData.append("enabled", (!settings.testMode).toString());
               fetcher.submit(formData, { method: "post" });
             }}
-            className={`w-full px-4 py-2 ${settings.testMode ? 'bg-yellow-500' : 'bg-gray-600'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+            className={`w-full px-4 py-2 ${settings.testMode ? "bg-yellow-500" : "bg-gray-600"} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
-            {settings.testMode ? '🧪 Modo Test ON' : '🧪 Activar Modo Test'}
+            {settings.testMode ? "🧪 Modo Test ON" : "🧪 Activar Modo Test"}
           </button>
         </div>
       </div>
@@ -476,7 +541,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           className="relative w-full border-2 border-gray-800 bg-cyan-50 rounded-lg overflow-hidden shadow-lg"
           style={{
             aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`,
-            cursor: puntoArrastrando ? 'grabbing' : 'crosshair'
+            cursor: puntoArrastrando ? "grabbing" : "crosshair",
           }}
         >
           <img
@@ -484,31 +549,32 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
             alt="Mapa de España"
             className="w-full h-full object-contain pointer-events-none"
           />
-          
+
           {/* Cordilleras existentes */}
-          {mostrarCordilleras && cordilleras.map((cordillera) => (
-            <div key={`existing-${cordillera.id}`}>
-              <div
-                className="absolute w-3 h-3 bg-red-600/60 rounded-full border-2 border-red-600 z-[5]"
-                style={{
-                  left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                  top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              />
-              <div
-                className="absolute text-[10px] text-red-600 font-bold bg-white/95 px-1.5 py-0.5 rounded z-[6] whitespace-nowrap border border-red-600"
-                style={{
-                  left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
-                  top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
-                  transform: 'translateX(-50%)'
-                }}
-              >
-                {cordillera.nombre}
+          {mostrarCordilleras &&
+            cordilleras.map((cordillera) => (
+              <div key={`existing-${cordillera.id}`}>
+                <div
+                  className="absolute w-3 h-3 bg-red-600/60 rounded-full border-2 border-red-600 z-[5]"
+                  style={{
+                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                    top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                />
+                <div
+                  className="absolute text-[10px] text-red-600 font-bold bg-white/95 px-1.5 py-0.5 rounded z-[6] whitespace-nowrap border border-red-600"
+                  style={{
+                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                    top: `${((cordillera.y - 20) / MAP_HEIGHT) * 100}%`,
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  {cordillera.nombre}
+                </div>
               </div>
-            </div>
-          ))}
-          
+            ))}
+
           {/* Puntos nuevos capturados */}
           {puntos.map((punto) => (
             <div key={`new-${punto.id}`}>
@@ -518,22 +584,24 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                   onDragStart={(e) => handlePuntoDragStart(e, punto.id)}
                   onDragEnd={handlePuntoDragEnd}
                   className={`absolute border-2 shadow-md pointer-events-auto ${
-                    puntoArrastrando === punto.id 
-                      ? 'bg-blue-600/50 border-blue-600/70 z-[20] opacity-50 cursor-grabbing' 
-                      : puntoSeleccionado === punto.id 
-                        ? 'bg-blue-600/30 border-blue-600 z-[15] cursor-grab'
-                        : 'bg-blue-600/15 border-blue-600/70 z-10 cursor-grab'
+                    puntoArrastrando === punto.id
+                      ? "bg-blue-600/50 border-blue-600/70 z-[20] opacity-50 cursor-grabbing"
+                      : puntoSeleccionado === punto.id
+                        ? "bg-blue-600/30 border-blue-600 z-[15] cursor-grab"
+                        : "bg-blue-600/15 border-blue-600/70 z-10 cursor-grab"
                   }`}
                   style={{
                     left: `${(punto.x / MAP_WIDTH) * 100}%`,
                     top: `${(punto.y / MAP_HEIGHT) * 100}%`,
                     width: `${(punto.width / MAP_WIDTH) * 100}%`,
                     height: `${(punto.height / MAP_HEIGHT) * 100}%`,
-                    transform: `translate(-50%, -50%) rotate(${punto.rotation || 0}deg)`
+                    transform: `translate(-50%, -50%) rotate(${punto.rotation || 0}deg)`,
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setPuntoSeleccionado(puntoSeleccionado === punto.id ? null : punto.id);
+                    setPuntoSeleccionado(
+                      puntoSeleccionado === punto.id ? null : punto.id,
+                    );
                   }}
                 />
               ) : (
@@ -543,35 +611,37 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                   onDragEnd={handlePuntoDragEnd}
                   className={`absolute w-4 h-4 rounded-full border-2 border-blue-600 shadow-md pointer-events-auto ${
                     puntoArrastrando === punto.id
-                      ? 'bg-blue-600/50 z-[20] opacity-50 cursor-grabbing'
+                      ? "bg-blue-600/50 z-[20] opacity-50 cursor-grabbing"
                       : puntoSeleccionado === punto.id
-                        ? 'bg-blue-600 border-blue-600 z-[15] cursor-grab'
-                        : 'bg-blue-600/70 z-10 cursor-grab'
+                        ? "bg-blue-600 border-blue-600 z-[15] cursor-grab"
+                        : "bg-blue-600/70 z-10 cursor-grab"
                   }`}
                   style={{
                     left: `${(punto.x / MAP_WIDTH) * 100}%`,
                     top: `${(punto.y / MAP_HEIGHT) * 100}%`,
-                    transform: 'translate(-50%, -50%)',
-                    borderWidth: puntoSeleccionado === punto.id ? '3px' : '2px'
+                    transform: "translate(-50%, -50%)",
+                    borderWidth: puntoSeleccionado === punto.id ? "3px" : "2px",
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setPuntoSeleccionado(puntoSeleccionado === punto.id ? null : punto.id);
+                    setPuntoSeleccionado(
+                      puntoSeleccionado === punto.id ? null : punto.id,
+                    );
                   }}
                 />
               )}
-              
+
               <div
                 className={`absolute text-[11px] font-bold px-2 py-0.5 rounded whitespace-nowrap border shadow-md pointer-events-none ${
-                  puntoSeleccionado === punto.id 
-                    ? 'bg-blue-600 text-white border-blue-800 z-[16]' 
-                    : 'bg-white/95 text-blue-600 border-blue-600 z-[11]'
+                  puntoSeleccionado === punto.id
+                    ? "bg-blue-600 text-white border-blue-800 z-[16]"
+                    : "bg-white/95 text-blue-600 border-blue-600 z-[11]"
                 }`}
                 style={{
                   left: `${(punto.x / MAP_WIDTH) * 100}%`,
                   top: `${((punto.y - 20) / MAP_HEIGHT) * 100}%`,
-                  transform: 'translateX(-50%)',
-                  borderWidth: puntoSeleccionado === punto.id ? '2px' : '1px'
+                  transform: "translateX(-50%)",
+                  borderWidth: puntoSeleccionado === punto.id ? "2px" : "1px",
                 }}
               >
                 {punto.nombre}
@@ -583,9 +653,9 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
                   style={{
                     left: `${(punto.x / MAP_WIDTH) * 100}%`,
                     top: `${(punto.y / MAP_HEIGHT) * 100}%`,
-                    width: `${(punto.tolerancia * 2 / MAP_WIDTH) * 100}%`,
-                    height: `${(punto.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
-                    transform: 'translate(-50%, -50%)'
+                    width: `${((punto.tolerancia * 2) / MAP_WIDTH) * 100}%`,
+                    height: `${((punto.tolerancia * 2) / MAP_HEIGHT) * 100}%`,
+                    transform: "translate(-50%, -50%)",
                   }}
                 />
               )}
@@ -602,7 +672,8 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               ⚠️ Confirmar Eliminación
             </h3>
             <p className="text-gray-700 mb-6">
-              ¿Estás seguro de que quieres eliminar <strong>"{confirmDelete.nombre}"</strong>?
+              ¿Estás seguro de que quieres eliminar{" "}
+              <strong>"{confirmDelete.nombre}"</strong>?
             </p>
             <p className="text-sm text-gray-500 mb-6">
               Esta acción no se puede deshacer.

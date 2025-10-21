@@ -4,5 +4,5 @@ export default [
   index("routes/home.tsx"),
   route("juego", "routes/juego.tsx"),
   route("dev", "routes/dev.tsx"),
-  route("esstudiar", "routes/estudiar.tsx"),
+  route("estudiar", "routes/estudiar.tsx"),
 ] satisfies RouteConfig;
