@@ -141,6 +141,7 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
   const [categoriaEditando, setCategoriaEditando] = useState<string | null>(null);
   const [categoriaEditandoNombre, setCategoriaEditandoNombre] = useState("");
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("");
+  const [categoriasFiltradas, setCategoriasFiltradas] = useState<Set<string>>(new Set());
   const puntosRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const puntosContainerRef = useRef<HTMLDivElement>(null);
 
@@ -417,7 +418,16 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
               Puntos Capturados ({puntos.length})
             </h3>
             <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
-              {puntos.map((punto) => (
+              {puntos
+                .filter((punto) => {
+                  // Si no hay filtros seleccionados, mostrar todos
+                  if (categoriasFiltradas.size === 0) return true;
+                  // Si el punto no tiene categoría, no mostrar si hay filtros activos
+                  if (!punto.categoriaId) return false;
+                  // Mostrar solo si la categoría del punto está en los filtros seleccionados
+                  return categoriasFiltradas.has(punto.categoriaId);
+                })
+                .map((punto) => (
                 <div
                   key={punto.id}
                   ref={(el) => { puntosRefs.current[punto.id] = el; }}
@@ -666,6 +676,43 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
+          {/* Filtro por categorías */}
+          {categorias.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-semibold text-gray-800 mb-2">Filtrar elementos por categoría:</h4>
+              <div className="space-y-1">
+                <label className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    checked={categoriasFiltradas.size === 0}
+                    onChange={() => setCategoriasFiltradas(new Set())}
+                    className="mr-2"
+                  />
+                  <span className="text-gray-700">Mostrar todas</span>
+                </label>
+                {categorias.map((categoria) => (
+                  <label key={categoria.id} className="flex items-center text-sm">
+                    <input
+                      type="checkbox"
+                      checked={categoriasFiltradas.has(categoria.id)}
+                      onChange={(e) => {
+                        const newFiltradas = new Set(categoriasFiltradas);
+                        if (e.target.checked) {
+                          newFiltradas.add(categoria.id);
+                        } else {
+                          newFiltradas.delete(categoria.id);
+                        }
+                        setCategoriasFiltradas(newFiltradas);
+                      }}
+                      className="mr-2"
+                    />
+                    <span className="text-gray-700">{categoria.nombre}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Lista de categorías */}
           {categorias.length > 0 && (
             <div className="space-y-2">
@@ -765,7 +812,16 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
           {/* ElementoGeograficos existentes */}
           {mostrarElementoGeograficos &&
-            cordilleras.map((cordillera) => (
+            cordilleras
+              .filter((cordillera) => {
+                // Si no hay filtros seleccionados, mostrar todos
+                if (categoriasFiltradas.size === 0) return true;
+                // Si el elemento no tiene categoría, no mostrar si hay filtros activos
+                if (!cordillera.categoriaId) return false;
+                // Mostrar solo si la categoría del elemento está en los filtros seleccionados
+                return categoriasFiltradas.has(cordillera.categoriaId);
+              })
+              .map((cordillera) => (
               <div key={`existing-${cordillera.id}`}>
                 <div
                   className="absolute w-3 h-3 bg-red-600/60 rounded-full border-2 border-red-600 z-[5]"
@@ -789,7 +845,16 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
             ))}
 
           {/* Puntos nuevos capturados */}
-          {puntos.map((punto) => (
+          {puntos
+            .filter((punto) => {
+              // Si no hay filtros seleccionados, mostrar todos
+              if (categoriasFiltradas.size === 0) return true;
+              // Si el punto no tiene categoría, no mostrar si hay filtros activos
+              if (!punto.categoriaId) return false;
+              // Mostrar solo si la categoría del punto está en los filtros seleccionados
+              return categoriasFiltradas.has(punto.categoriaId);
+            })
+            .map((punto) => (
             <div key={`new-${punto.id}`}>
               {punto.width !== undefined && punto.height !== undefined ? (
                 <div
