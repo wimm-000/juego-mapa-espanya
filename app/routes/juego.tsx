@@ -31,7 +31,8 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
   const [cordillerasRestantes, setCordillerasRestantes] = useState<Cordillera[]>(cordilleras);
   const [cordillerasFalladas, setCordillerasFalladas] = useState<Cordillera[]>([]);
   const [draggedCordillera, setDraggedCordillera] = useState<Cordillera | null>(null);
-  const [modoTest, setModoTest] = useState(false);
+  const [mostrarAreas, setMostrarAreas] = useState(false);
+  // const [modoTest, setModoTest] = useState(false);
   const [mostrarFelicitaciones, setMostrarFelicitaciones] = useState(false);
 
   // Detectar cuando se completan todas las cordilleras
@@ -172,11 +173,17 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             🏠 Home
           </Link>
           <button
+            onClick={() => setMostrarAreas(!mostrarAreas)}
+            className={`px-4 py-2 ${mostrarAreas ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+          >
+            {mostrarAreas ? '📍 Áreas ON' : '📍 Mostrar Áreas'}
+          </button>
+          {/* <button
             onClick={() => setModoTest(!modoTest)}
             className={`px-4 py-2 ${modoTest ? 'bg-yellow-500' : 'bg-gray-500'} text-white border-none rounded-lg font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
           >
             {modoTest ? '🧪 Test ON' : '🧪 Test'}
-          </button>
+          </button> */}
           <button
             onClick={handleReset}
             className="px-4 py-2 bg-gray-500 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-gray-600 transition-colors"
@@ -244,8 +251,46 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             className="w-full h-full object-contain cursor-crosshair"
           />
           
+          {/* Modo Mostrar Áreas: Mostrar solo las zonas sin texto */}
+          {mostrarAreas && cordilleras.map((cordillera) => {
+            const tieneZonaRectangular = cordillera.width !== null && 
+                                        cordillera.width !== undefined && 
+                                        cordillera.height !== null && 
+                                        cordillera.height !== undefined;
+            
+            return (
+            <div key={`area-${cordillera.id}`}>
+              {tieneZonaRectangular ? (
+                <div
+                  className="absolute bg-green-600/20 border-2 border-green-600/80 pointer-events-none"
+                  style={{
+                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                    top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                    width: `${(cordillera.width! / MAP_WIDTH) * 100}%`,
+                    height: `${(cordillera.height! / MAP_HEIGHT) * 100}%`,
+                    transform: `translate(-50%, -50%) rotate(${cordillera.rotation || 0}deg)`,
+                    zIndex: 5
+                  }}
+                />
+              ) : (
+                <div
+                  className="absolute border-2 border-green-600/60 rounded-full bg-green-600/10 pointer-events-none"
+                  style={{
+                    left: `${(cordillera.x / MAP_WIDTH) * 100}%`,
+                    top: `${(cordillera.y / MAP_HEIGHT) * 100}%`,
+                    width: `${(cordillera.tolerancia * 2 / MAP_WIDTH) * 100}%`,
+                    height: `${(cordillera.tolerancia * 2 / MAP_HEIGHT) * 100}%`,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 5
+                  }}
+                />
+              )}
+            </div>
+            );
+          })}
+
           {/* Modo Test: Mostrar todas las zonas correctas */}
-          {modoTest && cordilleras.map((cordillera) => {
+          {/* {modoTest && cordilleras.map((cordillera) => {
             const tieneZonaRectangular = cordillera.width !== null && 
                                         cordillera.width !== undefined && 
                                         cordillera.height !== null && 
@@ -253,7 +298,6 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
             
             return (
             <div key={`test-${cordillera.id}`}>
-              {/* Zona rectangular o punto circular */}
               {tieneZonaRectangular ? (
                 <>
                   <div
@@ -314,7 +358,7 @@ export default function Juego({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
             );
-          })}
+          })} */}
 
           {cordillerasColocadas.map((colocada) => {
             const cordillera = cordilleras.find(c => c.id === colocada.cordilleraId);
