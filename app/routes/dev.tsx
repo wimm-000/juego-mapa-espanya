@@ -385,119 +385,6 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           </label>
         </div>
 
-        {/* Gestión de Categorías */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">
-            Gestión de Categorías
-          </h3>
-
-          {/* Crear nueva categoría */}
-          <div className="mb-4">
-            <label className="block mb-2 font-semibold text-gray-800">
-              Nueva Categoría:
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={nuevaCategoria}
-                onChange={(e) => setNuevaCategoria(e.target.value)}
-                placeholder="Ej: Cordilleras"
-                className="flex-1 p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
-              />
-              <button
-                onClick={() => {
-                  if (nuevaCategoria.trim()) {
-                    const formData = new FormData();
-                    formData.append("intent", "createCategoria");
-                    formData.append("nombre", nuevaCategoria.trim());
-                    fetcher.submit(formData, { method: "post" });
-                    setNuevaCategoria("");
-                  }
-                }}
-                className="px-4 py-2 bg-green-600 text-white border-none rounded font-semibold cursor-pointer hover:bg-green-700 transition-colors"
-              >
-                ➕ Crear
-              </button>
-            </div>
-          </div>
-
-          {/* Lista de categorías */}
-          {categorias.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-semibold text-gray-800">Categorías Existentes:</h4>
-              {categorias.map((categoria) => (
-                <div
-                  key={categoria.id}
-                  className="flex items-center gap-2 p-2 bg-gray-50 rounded"
-                >
-                  {categoriaEditando === categoria.id ? (
-                    <>
-                      <input
-                        type="text"
-                        value={categoriaEditandoNombre}
-                        onChange={(e) => setCategoriaEditandoNombre(e.target.value)}
-                        className="flex-1 p-1 border border-gray-300 rounded text-sm bg-white text-gray-800"
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => {
-                          if (categoriaEditandoNombre.trim()) {
-                            const formData = new FormData();
-                            formData.append("intent", "updateCategoria");
-                            formData.append("id", categoria.id);
-                            formData.append("nombre", categoriaEditandoNombre.trim());
-                            fetcher.submit(formData, { method: "post" });
-                          }
-                          setCategoriaEditando(null);
-                          setCategoriaEditandoNombre("");
-                        }}
-                        className="px-2 py-1 bg-green-600 text-white border-none rounded text-xs cursor-pointer hover:bg-green-700"
-                      >
-                        ✓
-                      </button>
-                      <button
-                        onClick={() => {
-                          setCategoriaEditando(null);
-                          setCategoriaEditandoNombre("");
-                        }}
-                        className="px-2 py-1 bg-gray-600 text-white border-none rounded text-xs cursor-pointer hover:bg-gray-700"
-                      >
-                        ✕
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex-1 text-gray-800">{categoria.nombre}</span>
-                      <button
-                        onClick={() => {
-                          setCategoriaEditando(categoria.id);
-                          setCategoriaEditandoNombre(categoria.nombre);
-                        }}
-                        className="px-2 py-1 bg-blue-600 text-white border-none rounded text-xs cursor-pointer hover:bg-blue-700"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`¿Eliminar la categoría "${categoria.nombre}"?`)) {
-                            const formData = new FormData();
-                            formData.append("intent", "deleteCategoria");
-                            formData.append("id", categoria.id);
-                            fetcher.submit(formData, { method: "post" });
-                          }
-                        }}
-                        className="px-2 py-1 bg-red-600 text-white border-none rounded text-xs cursor-pointer hover:bg-red-700"
-                      >
-                        🗑️
-                      </button>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Lista de puntos capturados */}
         {puntos.length > 0 && (
           <div className="bg-white p-6 rounded-lg shadow">
@@ -686,6 +573,119 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
           >
             {settings.testMode ? "🧪 Modo Test ON" : "🧪 Activar Modo Test"}
           </button>
+        </div>
+
+        {/* Gestión de Categorías */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Gestión de Categorías
+          </h3>
+
+          {/* Crear nueva categoría */}
+          <div className="mb-4">
+            <label className="block mb-2 font-semibold text-gray-800">
+              Nueva Categoría:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={nuevaCategoria}
+                onChange={(e) => setNuevaCategoria(e.target.value)}
+                placeholder="Ej: Cordilleras"
+                className="flex-1 p-2 border border-gray-300 rounded text-base bg-white text-gray-800"
+              />
+              <button
+                onClick={() => {
+                  if (nuevaCategoria.trim()) {
+                    const formData = new FormData();
+                    formData.append("intent", "createCategoria");
+                    formData.append("nombre", nuevaCategoria.trim());
+                    fetcher.submit(formData, { method: "post" });
+                    setNuevaCategoria("");
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 text-white border-none rounded font-semibold cursor-pointer hover:bg-green-700 transition-colors"
+              >
+                ➕ Crear
+              </button>
+            </div>
+          </div>
+
+          {/* Lista de categorías */}
+          {categorias.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-semibold text-gray-800">Categorías Existentes:</h4>
+              {categorias.map((categoria) => (
+                <div
+                  key={categoria.id}
+                  className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                >
+                  {categoriaEditando === categoria.id ? (
+                    <>
+                      <input
+                        type="text"
+                        value={categoriaEditandoNombre}
+                        onChange={(e) => setCategoriaEditandoNombre(e.target.value)}
+                        className="flex-1 p-1 border border-gray-300 rounded text-sm bg-white text-gray-800"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          if (categoriaEditandoNombre.trim()) {
+                            const formData = new FormData();
+                            formData.append("intent", "updateCategoria");
+                            formData.append("id", categoria.id);
+                            formData.append("nombre", categoriaEditandoNombre.trim());
+                            fetcher.submit(formData, { method: "post" });
+                          }
+                          setCategoriaEditando(null);
+                          setCategoriaEditandoNombre("");
+                        }}
+                        className="px-2 py-1 bg-green-600 text-white border-none rounded text-xs cursor-pointer hover:bg-green-700"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCategoriaEditando(null);
+                          setCategoriaEditandoNombre("");
+                        }}
+                        className="px-2 py-1 bg-gray-600 text-white border-none rounded text-xs cursor-pointer hover:bg-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 text-gray-800">{categoria.nombre}</span>
+                      <button
+                        onClick={() => {
+                          setCategoriaEditando(categoria.id);
+                          setCategoriaEditandoNombre(categoria.nombre);
+                        }}
+                        className="px-2 py-1 bg-blue-600 text-white border-none rounded text-xs cursor-pointer hover:bg-blue-700"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`¿Eliminar la categoría "${categoria.nombre}"?`)) {
+                            const formData = new FormData();
+                            formData.append("intent", "deleteCategoria");
+                            formData.append("id", categoria.id);
+                            fetcher.submit(formData, { method: "post" });
+                          }
+                        }}
+                        className="px-2 py-1 bg-red-600 text-white border-none rounded text-xs cursor-pointer hover:bg-red-700"
+                      >
+                        🗑️
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
