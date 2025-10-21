@@ -258,8 +258,12 @@ export default function Dev({ loaderData }: Route.ComponentProps) {
 
       // Añadir solo los campos que han cambiado
       Object.entries(cambios).forEach(([key, value]) => {
-        if (value !== undefined && key !== "id") {
-          formData.append(key, value.toString());
+        if (key !== "id") {
+          if (value === undefined) {
+            formData.append(key, "");
+          } else {
+            formData.append(key, value.toString());
+          }
         }
       });
 
